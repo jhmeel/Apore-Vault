@@ -23,6 +23,6 @@ export const StyledButton = styled(Button)(({ theme }) => ({
 }));
 
 export const Logo = styled('img')({
-  width: 150,
+  width: 120,
   marginBottom: 20,
 });

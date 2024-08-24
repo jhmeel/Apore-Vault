@@ -1,13 +1,13 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { Typography, Grid, Divider,Button } from '@mui/material';
+import { Typography, Grid, Divider, Button } from '@mui/material';
 import { FormContainer, StyledTextField, StyledButton, Logo } from './shared';
 import { useNavigate } from 'react-router-dom';
 import { auth, db, storage } from '../../firebase';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { IUser } from '../../types';
-import logoImg from '../../assets/logo.png'
+import logoImg from '../../assets/logo.png';
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
@@ -95,11 +95,31 @@ const Signup: React.FC = () => {
         <Grid item xs={12}>
           <StyledTextField
             fullWidth
+            label="Full Name"
+            name="fullName"
+            required
+            value={formData.fullName}
+            onChange={handleChange}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <StyledTextField
+            fullWidth
             label="Email"
             name="email"
             type="email"
             required
             value={formData.email}
+            onChange={handleChange}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <StyledTextField
+            fullWidth
+            label="Phone Number"
+            name="phoneNumber"
+            required
+            value={formData.phoneNumber}
             onChange={handleChange}
           />
         </Grid>
@@ -125,16 +145,6 @@ const Signup: React.FC = () => {
             onChange={handleChange}
           />
         </Grid>
-        <Grid item xs={12}>
-          <StyledTextField
-            fullWidth
-            label="Full Name"
-            name="fullName"
-            required
-            value={formData.fullName}
-            onChange={handleChange}
-          />
-        </Grid>
         <Grid item xs={12} sm={6}>
           <StyledTextField
             fullWidth
@@ -157,17 +167,7 @@ const Signup: React.FC = () => {
             onChange={handleChange}
           />
         </Grid>
-        <Grid item xs={12}>
-          <StyledTextField
-            fullWidth
-            label="Phone Number"
-            name="phoneNumber"
-            required
-            value={formData.phoneNumber}
-            onChange={handleChange}
-          />
-        </Grid>
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <input
             accept="image/*,application/pdf"
             style={{ display: 'none' }}
@@ -181,7 +181,7 @@ const Signup: React.FC = () => {
               Upload ID Document
             </Button>
           </label>
-        </Grid>
+        </Grid> */}
       </Grid>
       {error && (
         <Typography color="error" align="center" style={{ marginTop: 10 }}>
