@@ -1,5 +1,5 @@
 {
-  "name": "tbdex-wallet",
+  "name": "Apore Vault",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -23,7 +23,7 @@
     "buffer": "^6.0.3",
     "ethers": "^6.13.2",
     "events": "^3.3.0",
-    "firebase": "^10.12.5",
+    "firebase": "^10.13.0",
     "html2canvas": "^1.4.1",
     "jsbarcode": "^3.11.6",
     "ldrs": "^1.0.2",
