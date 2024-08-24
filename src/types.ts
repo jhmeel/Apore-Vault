@@ -45,3 +45,14 @@ export interface BlogPost {
   author: string;
   date: string;
 }
+
+export interface IUser {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  fullName: string;
+  dateOfBirth: string;
+  country: string;
+  phoneNumber: string;
+  idDocument: File | null;
+}

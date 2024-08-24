@@ -208,7 +208,7 @@ const Portfolio: React.FC = () => {
         justifyContent="space-between"
         alignItems="center"
       >
-        <Typography variant="h2">Your Portfolio</Typography>
+        <Typography variant="h2" gutterBottom>Your Portfolio</Typography>
         <IconButton onClick={toggleDrawer(true)} size="large">
           <SettingsIcon />
         </IconButton>

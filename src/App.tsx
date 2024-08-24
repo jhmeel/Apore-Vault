@@ -1,4 +1,4 @@
-import { useState, lazy, useEffect, Suspense, useMemo } from "react";
+import React, { useState, lazy, useEffect, Suspense, useMemo } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 const Setting = lazy(() => import("./pages/Setting"));
 const Landing = lazy(() => import("./pages/Landing"));
@@ -15,8 +15,11 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { getTheme } from "./theme/theme";
 import NavBar from "./components/Navbar";
 import Xender from "./pages/Xender";
-const Receiver = lazy(() => import("./pages/Receiver"))
-
+const Receiver = lazy(() => import("./pages/Receiver"));
+import { AuthProvider } from "./context/AuthContext";
+import Signup from "./pages/Auth/Signup";
+import Login from "./pages/Auth/Login";
+import ForgottenPassword from "./pages/Auth/ForgottenPassword";
 
 function App() {
   const { pathname } = useLocation();
@@ -76,22 +79,33 @@ function App() {
     <>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-
-        <Suspense fallback={<MainLoader />}>
-          <NavBar />
-          <Routes>
-            <Route path="/l" element={<Landing />}></Route>
-            <Route path="/" element={<Dashboard />}></Route>
-            <Route path="/portfolio" element={<Portfolio />}></Route>
-            <Route path="/converter" element={<Converter />}></Route>
-            <Route path="/xender" element={<Xender/>}></Route>
-            <Route path="/receiver" element={<Receiver />}></Route>
-            <Route path="/txhistory" element={<Txhistory />}></Route>
-            <Route path="/explore" element={<Blog />}></Route>
-            <Route path="/verify" element={<Verification />}></Route>
-            <Route path="/setting" element={<Setting />}></Route>
-          </Routes>
-        </Suspense>
+        <AuthProvider>
+          <Suspense fallback={<MainLoader />}>{!["/auth/login", "/auth/forgot-password", "/auth/signup"].includes(pathname) && (
+          <>
+                <NavBar />
+          </>
+        )}
+      
+            <Routes>
+              <Route path="/auth/signup" element={<Signup />}></Route>
+              <Route path="/auth/login" element={<Login />}></Route>
+              <Route
+                path="/auth/forgot-password"
+                element={<ForgottenPassword />}
+              ></Route>
+              <Route path="/l" element={<Landing />}></Route>
+              <Route path="/" element={<Dashboard />}></Route>
+              <Route path="/portfolio" element={<Portfolio />}></Route>
+              <Route path="/converter" element={<Converter />}></Route>
+              <Route path="/xender" element={<Xender />}></Route>
+              <Route path="/receiver" element={<Receiver />}></Route>
+              <Route path="/txhistory" element={<Txhistory />}></Route>
+              <Route path="/explore" element={<Blog />}></Route>
+              <Route path="/verify" element={<Verification />}></Route>
+              <Route path="/setting" element={<Setting />}></Route>
+            </Routes>
+          </Suspense>
+        </AuthProvider>
       </ThemeProvider>
     </>
   );

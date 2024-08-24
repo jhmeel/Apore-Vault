@@ -76,6 +76,7 @@ const NavBar: React.FC = () => {
 
   const handleAction = (action: string) => {
     setDrawerOpen(false);
+    navigate(action)
   };
   return (
     <ClickAwayListener onClickAway={handleClickAway}>
@@ -129,25 +130,25 @@ const NavBar: React.FC = () => {
                 <Button
                   fullWidth
                   variant="outlined"
-                  onClick={() => handleAction("transfer")}
+                  onClick={() => handleAction("/receiver")}
                 >
-                  Deposit
+                  Receive
                 </Button>
               </Grid>
               <Grid item xs={6}>
                 <Button
                   fullWidth
                   variant="outlined"
-                  onClick={() => handleAction("transfer")}
+                  onClick={() => handleAction("/xender")}
                 >
-                  Transfer
+                  Send
                 </Button>
               </Grid>
               <Grid item xs={6}>
                 <Button
                   fullWidth
                   variant="outlined"
-                  onClick={() => handleAction("convert")}
+                  onClick={() => handleAction("/converter")}
                 >
                   Convert
                 </Button>
