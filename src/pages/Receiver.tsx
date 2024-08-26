@@ -117,7 +117,7 @@ const Receiver = () => {
 
   return (
     <PageContainer maxWidth="md">
-     <Typography variant="h2" gutterBottom>
+     <Typography variant="h2" gutterBottom fontFamily="'Poppins', sans-serif">
         Receive Funds
       </Typography>
       <SearchBar
@@ -136,7 +136,7 @@ const Receiver = () => {
       />
       <Paper elevation={3} sx={{ borderRadius: 2, p: 2 }}>
         <Typography variant="subtitle1" gutterBottom>
-          Select a currency to receive:
+          Select a currency to receive
         </Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
           {filteredCurrencies.map((currency) => (

@@ -20,17 +20,25 @@ import { AuthProvider } from "./context/AuthContext";
 import Signup from "./pages/Auth/Signup";
 import Login from "./pages/Auth/Login";
 import ForgottenPassword from "./pages/Auth/ForgottenPassword";
+import Checkin from "./pages/Auth/Checkin";
+import AutoLogout from "./pages/Auth/AutoLogout";
+import { UserProvider, useWallet } from "./context/UserContext";
+
 
 function App() {
   const { pathname } = useLocation();
   const { toasts } = useToasterStore();
-  const [mode, setMode] = useState<"light" | "dark">("dark");
+  const {state} = useWallet()
+  
 
+  const [mode, setMode] = useState<"light" | "dark">("dark");
+  
   const theme = useMemo(() => getTheme(mode), [mode]);
 
   const toggleTheme = () => {
     setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
   };
+  
 
   useEffect(() => {
     window.scrollTo({
@@ -79,8 +87,10 @@ function App() {
     <>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        {/* <AutoLogout/> */}
         <AuthProvider>
-          <Suspense fallback={<MainLoader />}>{!["/auth/login", "/auth/forgot-password", "/auth/signup"].includes(pathname) && (
+          <UserProvider>
+          <Suspense fallback={<MainLoader />}>{!["/auth/login", "/auth/forgot-password", "/auth/signup","/auth/checkin", "/"].includes(pathname) && (
           <>
                 <NavBar />
           </>
@@ -93,8 +103,9 @@ function App() {
                 path="/auth/forgot-password"
                 element={<ForgottenPassword />}
               ></Route>
-              <Route path="/l" element={<Landing />}></Route>
-              <Route path="/" element={<Dashboard />}></Route>
+              <Route path="/" element={<Landing />}></Route>
+              <Route path="/auth/checkin" element={<Checkin />}></Route>
+              <Route path="/dashboard" element={<Dashboard />}></Route>
               <Route path="/portfolio" element={<Portfolio />}></Route>
               <Route path="/converter" element={<Converter />}></Route>
               <Route path="/xender" element={<Xender />}></Route>
@@ -105,6 +116,7 @@ function App() {
               <Route path="/setting" element={<Setting />}></Route>
             </Routes>
           </Suspense>
+          </UserProvider>
         </AuthProvider>
       </ThemeProvider>
     </>

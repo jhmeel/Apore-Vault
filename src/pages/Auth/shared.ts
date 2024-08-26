@@ -6,6 +6,7 @@ export const FormContainer = styled(Paper)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
+  minHeight:'100vh',
   maxWidth: 500,
   margin: '40px auto',
   [theme.breakpoints.down('sm')]: {
@@ -23,6 +24,15 @@ export const StyledButton = styled(Button)(({ theme }) => ({
 }));
 
 export const Logo = styled('img')({
-  width: 120,
+  width: 80,
   marginBottom: 20,
 });
+
+export const FederatedButton = styled(Button)(({ theme }) => ({
+  maxWidth: "300px",
+  width: "100%",
+  marginTop: theme.spacing(2),
+  display: "flex",
+  alignItems: "center",
+  gap: theme.spacing(2)
+}));

@@ -30,6 +30,7 @@ const Converter: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
 
   const handleOfferingSelect = (offering:Ioffering) => {
     setSelectedOffering(offering);
@@ -56,7 +57,7 @@ const Converter: React.FC = () => {
 
   return (
     <PageContainer maxWidth="md">
-      <Typography variant="h2" gutterBottom>
+      <Typography variant="h2" gutterBottom  fontFamily="'Poppins', sans-serif">
         Exchange
       </Typography>
       <SearchBar

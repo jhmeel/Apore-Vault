@@ -1,6 +1,6 @@
 import React, { useState, FormEvent } from 'react';
 import { Typography } from '@mui/material';
-import { FormContainer, StyledTextField, StyledButton, Logo } from './shared';
+import { FormContainer, StyledTextField, StyledButton, Logo } from './shared.js';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
@@ -26,8 +26,8 @@ const ForgottenPassword: React.FC = () => {
 
   return (
     <FormContainer component="form" onSubmit={handleSubmit}>
-      <Logo src={logoImg} alt="TBDex Wallet Logo" />
-      <Typography variant="h5" gutterBottom>
+      <Logo src={logoImg} alt="Apore" />
+      <Typography variant="h3" gutterBottom fontFamily="'Poppins', sans-serif">
         Reset Password
       </Typography>
       <StyledTextField

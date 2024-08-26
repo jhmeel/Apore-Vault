@@ -15,7 +15,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import newsImg from '../../assets/news.jpeg';
 import newss from '../../assets/newss.jpeg'
-import { BlogPost } from '../../types';
+import { IBlogPost } from '../../types';
 
 
 
@@ -27,7 +27,7 @@ const SearchBar = styled(TextField)(({ theme }) => ({
   },
 }));
 
-const mockBlogPosts: BlogPost[] = [
+const mockBlogPosts: IBlogPost[] = [
   {
     id: 1,
     title: "Understanding Bitcoin: A Beginner's Guide",
@@ -73,7 +73,7 @@ const Blog: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 10 }}>
-       <Typography variant="h2" gutterBottom>
+       <Typography variant="h2" gutterBottom fontFamily="'Poppins', sans-serif">
         Explore Crypto Blog
       </Typography>
       <SearchBar

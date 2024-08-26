@@ -45,6 +45,7 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
 
 const StyledCard = styled(Card)(({ theme }) => ({
   backgroundColor: theme.palette.mode === "dark" ? "#1E1E1E" : "#FFFFFF",
@@ -55,29 +56,6 @@ const StyledCard = styled(Card)(({ theme }) => ({
   "&:hover": {
     transform: "translateY(-5px)",
     boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
-  },
-}));
-
-const ActionButtonContainer = styled(Box)(({ theme }) => ({
-  display: "flex",
-  justifyContent: "space-between",
-  backgroundColor: theme.palette.background.paper,
-  borderRadius: 20,
-  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-  padding: theme.spacing(1),
-  "& button": {
-    flex: 1,
-    height: "4rem",
-    borderRadius: 0,
-    borderRight: `1px solid ${theme.palette.divider}`,
-    "&:last-child": {
-      borderRight: "none",
-    },
-    "& .MuiButton-startIcon": {
-      display: "block",
-      marginBottom: theme.spacing(1),
-    },
-    textTransform: "none",
   },
 }));
 
@@ -153,6 +131,10 @@ const WalletListItem = styled(ListItem)(({ theme }) => ({
   },
 }));
 
+const ActionButton = styled(Button)(({ theme }) => ({
+  margin: theme.spacing(1),
+}));
+
 const chartData = [
   { name: "Jan", value: 10000 },
   { name: "Feb", value: 12000 },
@@ -169,16 +151,17 @@ const Dashboard: React.FC = () => {
   const [isBalanceHidden, setIsBalanceHidden] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [notificationsCount, setNotificationsCount] = useState(3);
+  const [notificationsCount, setNotificationsCount] = useState(1);
   const [walletDrawerOpen, setWalletDrawerOpen] = useState(false);
   const navigate = useNavigate();
-
   const [web3Modal, setWeb3Modal] = useState<Web3Modal | null>(null);
   const [address, setAddress] = useState<string>("");
-  const [provider, setProvider] =
-    useState<ethers.providers.Web3Provider | null>(null);
+  const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>(null);
   const [usdtBalance, setUsdtBalance] = useState<string>("0");
   const [ethBalance, setEthBalance] = useState<string>("0");
+  const { userDetails } = useAuth();
+  const [filteredCryptoAssets, setFilteredCryptoAssets] = useState<IHolding[]>([]);
+  const [filteredFiatAssets, setFilteredFiatAssets] = useState<IHolding[]>([]);
 
   useEffect(() => {
     const providerOptions = {
@@ -205,6 +188,21 @@ const Dashboard: React.FC = () => {
 
     setWeb3Modal(newWeb3Modal);
   }, []);
+
+  useEffect(() => {
+    if (userDetails?.holdings) {
+      const cryptoAssets = userDetails.holdings.filter(asset => asset.type === 'Crypto');
+      const fiatAssets = userDetails.holdings.filter(asset => asset.type === 'Fiat');
+
+      setFilteredCryptoAssets(cryptoAssets.filter(asset =>
+        asset.name.toLowerCase().includes(searchQuery.toLowerCase())
+      ));
+
+      setFilteredFiatAssets(fiatAssets.filter(asset =>
+        asset.name.toLowerCase().includes(searchQuery.toLowerCase())
+      ));
+    }
+  }, [userDetails?.holdings, searchQuery]);
 
   const disconnectWallet = async () => {
     if (web3Modal) {
@@ -238,61 +236,6 @@ const Dashboard: React.FC = () => {
     }
     return `$${balance}`;
   };
-
-  const cryptoAssets = [
-    {
-      name: "Bitcoin",
-      symbol: "BTC",
-      price: 26159.0,
-      change: 1.383,
-      color: "#F7931A",
-      allocation: 48.3,
-    },
-    {
-      name: "Ethereum",
-      symbol: "ETH",
-      price: 1659.08,
-      change: 2.4,
-      color: "#627EEA",
-      allocation: 30.1,
-    },
-    {
-      name: "Litecoin",
-      symbol: "LTC",
-      price: 65.91,
-      change: -1.25,
-      color: "#BFBBBB",
-      allocation: 21.6,
-    },
-  ];
-
-  const fiatAssets = [
-    {
-      name: "US Dollar",
-      symbol: "USD",
-      price: 1.0,
-      change: 0.0,
-      color: "#85bb65",
-      allocation: 60.0,
-    },
-    {
-      name: "Euro",
-      symbol: "EUR",
-      price: 1.18,
-      change: 0.5,
-      color: "#0052b4",
-      allocation: 40.0,
-    },
-  ];
-
-  const filteredAssets =
-    tabValue === 0
-      ? cryptoAssets.filter((asset) =>
-          asset.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      : fiatAssets.filter((asset) =>
-          asset.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
 
   const openWalletDrawer = () => {
     setWalletDrawerOpen(true);
@@ -328,7 +271,6 @@ const Dashboard: React.FC = () => {
           break;
         case "Binance Chain Wallet":
           instance = await web3Modal.connectTo("binancechainwallet");
-          break;
           break;
         default:
           instance = await web3Modal.connect();
@@ -387,7 +329,7 @@ const Dashboard: React.FC = () => {
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h6">Crimpy 👋</Typography>
+        <Typography variant="h6" fontFamily="'Poppins', sans-serif">{userDetails?.fullName.split(' ')[0]} 👋</Typography>
         <Box display="flex" alignItems="center">
           {!address ? (
             <WalletButton
@@ -479,30 +421,38 @@ const Dashboard: React.FC = () => {
           </LineChart>
         </ResponsiveContainer>
 
-        <ActionButtonContainer mt={2}>
-          <Button startIcon={<SendIcon />} onClick={() => navigate("/xender")}>
+        <Box display="flex" justifyContent="center" mb={2}>
+          <ActionButton
+            variant="contained"
+            color="primary"
+            startIcon={<SendIcon />}
+            onClick={() => navigate('/xender')}
+          >
             Send
-          </Button>
-          <Button
+          </ActionButton>
+          <ActionButton
+            variant="contained"
+            color="secondary"
             startIcon={<CallReceivedIcon />}
-            onClick={() => navigate("/receiver")}
+            onClick={() => navigate('/receiver')}
           >
             Receive
-          </Button>
-          <Button
+          </ActionButton>
+          <ActionButton
+            variant="contained"
+            color="info"
             startIcon={<SwapHorizIcon />}
-            onClick={() => navigate("/converter")}
+            onClick={() => navigate('/converter')}
           >
             Convert
-          </Button>
-        </ActionButtonContainer>
+          </ActionButton>
+        </Box>
       </StyledCard>
 
       <Box display="flex" alignItems="center" mb={2}>
         <SearchBar
           fullWidth
-          variant="outlined"
-          size="small"
+          variant="outlined"size="small"
           placeholder="Search assets"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -532,35 +482,40 @@ const Dashboard: React.FC = () => {
 
       <StyledCard>
         <List disablePadding>
-          {filteredAssets.map((asset) => (
-            <AssetItem key={asset.symbol}>
-              <ListItemAvatar>
-                <Avatar sx={{ bgcolor: asset.color }}>{asset.symbol[0]}</Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary={asset.name}
-                secondary={`Price: $${asset.price.toFixed(2)}`}
-              />
-              <Box display="flex" flexDirection="column" alignItems="flex-end">
-                <Typography
-                  variant="body2"
-                  color={asset.change >= 0 ? "success.main" : "error.main"}
-                >
-                  {asset.change.toFixed(2)}%
-                </Typography>
-                <ProgressWrapper>
-                  <ProgressBar
-                    width={asset.allocation}
-                    color={
-                      asset.change >= 0
-                        ? theme.palette.success.main
-                        : theme.palette.error.main
-                    }
+          {tabValue === 0
+            ? filteredCryptoAssets.map((asset) => (
+                <AssetItem key={asset.id}>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: asset.color || theme.palette.primary.main }}>{asset.symbol?.[0]}</Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={asset.name}
+                    secondary={`${asset.amount} ${asset.symbol}`}
                   />
-                </ProgressWrapper>
-              </Box>
-            </AssetItem>
-          ))}
+                  <Box display="flex" flexDirection="column" alignItems="flex-end">
+                    <Typography variant="body2">
+                      ${asset.value?.toFixed(2)}
+                    </Typography>
+                  </Box>
+                </AssetItem>
+              ))
+            : filteredFiatAssets.map((asset) => (
+                <AssetItem key={asset.id}>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: asset.color || theme.palette.secondary.main }}>{asset.symbol?.[0]}</Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={asset.name}
+                    secondary={`${asset.symbol}`}
+                  />
+                  <Box display="flex" flexDirection="column" alignItems="flex-end">
+                    <Typography variant="body2">
+                     ${asset.value?.toFixed(2)}
+                    </Typography>
+                  </Box>
+                </AssetItem>
+              ))
+          }
         </List>
       </StyledCard>
 
@@ -585,28 +540,6 @@ const Dashboard: React.FC = () => {
               <ListItemText
                 primary="Bitcoin Price Surge"
                 secondary="Bitcoin has increased by 2.5% in the last 24 hours."
-              />
-            </ListItem>
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar>
-                  <TrendingUpIcon />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary="Ethereum Wallet Update"
-                secondary="Ethereum wallet received 0.5 ETH."
-              />
-            </ListItem>
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar>
-                  <TrendingUpIcon />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary="Litecoin Price Drop"
-                secondary="Litecoin price dropped by 1.2%."
               />
             </ListItem>
           </List>

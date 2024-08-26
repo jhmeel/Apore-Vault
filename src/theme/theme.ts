@@ -1,5 +1,5 @@
 import { createTheme } from '@mui/material/styles';
-import { lightTheme, darkTheme } from './colors';
+import { lightTheme, darkTheme } from './colors.js';
 
 export const getTheme = (mode: 'light' | 'dark') => {
   const colors = mode === 'light' ? lightTheme : darkTheme;
@@ -23,7 +23,7 @@ export const getTheme = (mode: 'light' | 'dark') => {
       },
     },
     typography: {
-      fontFamily: "'Inter', sans-serif",
+     
       h1: {
         fontSize: '2rem',
         fontWeight: 700,

@@ -331,7 +331,7 @@ const Txhistory: React.FC = () => {
       position: "relative",
     }}
   >
-        <Typography variant="h2" gutterBottom>
+        <Typography variant="h2" gutterBottom fontFamily="'Poppins', sans-serif">
         Transaction History
       </Typography>
       <Box>

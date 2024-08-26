@@ -3,6 +3,7 @@ import { User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { IUser } from '../types';
+import toast from 'react-hot-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -30,14 +31,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
-            setUserDetails(userDoc.data() as UserDetails);
+            setUserDetails(userDoc.data() as IUser);
           }
-        } catch (error) {
-          console.error('Error fetching user details:', error);
+        } catch (error:any) {
+         toast.error(`Error fetching user details: ${error.message}`);
         }
       } else {
         setUserDetails(null);
-      }
+      }0
       setLoading(false);
     });
 

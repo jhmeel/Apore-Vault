@@ -147,7 +147,7 @@ const Xender: React.FC = () => {
 
   return (
     <PageContainer maxWidth="md">
-     <Typography variant="h2" gutterBottom>
+     <Typography variant="h2" gutterBottom fontFamily="'Poppins', sans-serif">
         Send Funds
       </Typography>
       <SearchBar
