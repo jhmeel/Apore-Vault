@@ -22,7 +22,8 @@ const DrawerContent = styled(Box)(({ theme }) => ({
 const CurrencyAvatar = styled(Avatar)(({ theme }) => ({
   width: 48,
   height: 48,
-  fontSize: '1.5rem',
+  fontSize: '1rem',
+  fontWeight:1000,
   marginRight: theme.spacing(1),
 }));
 
