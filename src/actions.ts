@@ -316,24 +316,15 @@ export const useUserActions = () => {
     }
   };
 
-  const getOfferingsByDID = async (
-    did: string
-  ): Promise<Ioffering[] | null> => {
+  const getOfferingsByDID = async (did: string): Promise<Ioffering[] | null> => {
     try {
-      const cachedOfferings = await localforage.getItem(did);
+      const cachedOfferings = await localforage.getItem<string>(did);
       if (cachedOfferings) {
-        return JSON.parse(cachedOfferings as string);
+        return JSON.parse(cachedOfferings) as Ioffering[];
       } else {
         // If not found in cache, refetch
-        const offerings = await TbdexHttpClient.getOfferings({
-          pfiDid: did,
-        }).then(async (offerings) => {
-          await localforage.setItem(did, JSON.stringify(offerings)); // Cache the new offerings
-
-          console.log(offerings);
-          return offerings;
-        });
-
+        const offerings = await TbdexHttpClient.getOfferings({ pfiDid: did });
+        await localforage.setItem(did, JSON.stringify(offerings)); // Cache the new offerings
         return offerings as Ioffering[];
       }
     } catch (err: any) {
@@ -341,6 +332,7 @@ export const useUserActions = () => {
       return null;
     }
   };
+  
 
   const unCacheOfferings = async (did: string) => {
     try {
@@ -532,21 +524,28 @@ export const useUserActions = () => {
     }
   };
 
-  const getLiquidityProviders = (): ILiquidityProvider[] | null => {
+  const getLiquidityProviders = async (): Promise<ILiquidityProvider[] | null> => {
     try {
-      const providers = liquidityProviders.map(async (provider) => ({
-        did: provider.did,
-        name: provider.name,
-        rating: 3.4,
-        offerings: getOfferingsByDID(provider.did),
-      }));
+      const providers = await Promise.all(
+        liquidityProviders.map(async (provider) => {
+          const offerings = await getOfferingsByDID(provider.did);
+          return {
+            did: provider.did,
+            name: provider.name,
+            rating: 3.4,
+            offerings: offerings,
+          } as ILiquidityProvider;
+        })
+      );
 
-      return providers as ILiquidityProvider[];
+  
+      return providers;
     } catch (error: any) {
       toast.error("Error getting liquidity providers:", error.message);
       return null;
     }
   };
+  
   return {
     state,
     toggleTheme,

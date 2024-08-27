@@ -94,3 +94,14 @@ export const holdings: IHolding[] = [
     address: generateAddress(),
   },
 ];
+
+
+export const formatSettlementTime = (time: number) => {
+  if (time < 60) {
+    return `${time} minutes`;
+  } else {
+    const hours = Math.floor(time / 60);
+    const minutes = time % 60;
+    return `${hours} hours, ${minutes} minutes`;
+  }
+};

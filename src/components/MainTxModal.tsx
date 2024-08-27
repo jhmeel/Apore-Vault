@@ -68,41 +68,41 @@ const MainTxModal: React.FC<MainTxModalProps> = ({
           
         <Grid container alignItems="center" spacing={1}>
         <Grid item>
-          <Typography variant="body1">{offering.payin?.currencyCode}</Typography>
+          <Typography variant="body1">{offering.data.payin?.currencyCode}</Typography>
         </Grid>
         <Grid item>
           <SwapHorizIcon />
         </Grid>
         <Grid item>
-          <Typography variant="body1">{offering?.payout?.currencyCode}</Typography>
+          <Typography variant="body1">{offering.data?.payout?.currencyCode}</Typography>
         </Grid>
       </Grid>
       <Typography variant="body1" id="transaction-modal-description">
-            {offering.description}
+            {offering.data.description}
           </Typography>
         </Box>
         <Divider />
         <Grid container spacing={4} mt={2}>
           <Grid item xs={12} md={6}>
             <TextField
-              label={`Amount in ${offering.payin?.currencyCode}`}
+              label={`Amount in ${offering.data.payin?.currencyCode}`}
               variant="outlined"
               fullWidth
               InputProps={{
                 endAdornment: (
-                  <InputAdornment position="end">{offering.payin?.currencyCode}</InputAdornment>
+                  <InputAdornment position="end">{offering.data.payin?.currencyCode}</InputAdornment>
                 ),
               }}
             />
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label={`Amount in ${offering.payout?.currencyCode}`}
+              label={`Amount in ${offering.data.payout?.currencyCode}`}
               variant="outlined"
               fullWidth
               InputProps={{
                 endAdornment: (
-                  <InputAdornment position="end">{offering.payout?.currencyCode}</InputAdornment>
+                  <InputAdornment position="end">{offering.data.payout?.currencyCode}</InputAdornment>
                 ),
               }}
             />
@@ -111,17 +111,17 @@ const MainTxModal: React.FC<MainTxModalProps> = ({
             <Grid container alignItems="center" justifyContent="space-between">
               <Grid item>
                 <Typography variant="body2" color="textSecondary">
-                  Exchange Rate: {offering.exchangeRate}
+                  Exchange Rate: {offering.data.payoutUnitsPerPayinUnit}
                 </Typography>
               </Grid>
               <Grid item>
                 <Typography variant="body2" color="textSecondary">
-                  Settlement Time: {formatSettlementTime(offering.settlementTime)}
+                  Settlement Time: {formatSettlementTime(offering.data.payout.methods[0].estimatedSettlementTime)}
                 </Typography>
               </Grid>
               <Grid item>
                 <Typography variant="body2" color="textSecondary">
-                  Fee: {offering.fee * 100}%
+                  Fee: {Number(offering.data.payoutUnitsPerPayinUnit)* 100}%
                 </Typography>
               </Grid>
             </Grid>

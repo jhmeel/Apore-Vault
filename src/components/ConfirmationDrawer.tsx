@@ -10,6 +10,7 @@ import {
   Avatar,
 } from '@mui/material';
 import toast from 'react-hot-toast';
+import { Ioffering } from '../types';
 
 const DrawerContent = styled(Box)(({ theme }) => ({
   width: '100%',
@@ -27,7 +28,7 @@ const CurrencyAvatar = styled(Avatar)(({ theme }) => ({
 
 interface ConfirmationDrawerProps {
   open: boolean;
-  offering: any;
+  offering: Ioffering|null;
   onClose: () => void;
 }
 
@@ -58,20 +59,20 @@ const ConfirmationDrawer: React.FC<ConfirmationDrawerProps> = ({
         </Typography>
         <Grid container alignItems="center" spacing={2} mb={2}>
           <Grid item>
-            <CurrencyAvatar>{offering.fromAsset}</CurrencyAvatar>
+            <CurrencyAvatar>{offering.data.payin.currencyCode}</CurrencyAvatar>
           </Grid>
           <Grid item>
             <Typography variant="h3">
-              {offering.fromAsset} to {offering.toAsset}
+              {offering.data.payin.currencyCode} to {offering.data.payout.currencyCode}
             </Typography>
           </Grid>
         </Grid>
 
         <Typography variant="body1" gutterBottom>
-          Exchange Rate: {offering.exchangeRate}
+          Exchange Rate: {offering.data.payoutUnitsPerPayinUnit}
         </Typography>
         <Typography variant="body1" gutterBottom>
-          Fee: {offering.fee}
+          Fee: {Number(offering.data.payoutUnitsPerPayinUnit)}
         </Typography>
         <Box mt={2}>
           <Button

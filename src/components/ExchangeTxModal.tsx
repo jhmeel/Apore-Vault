@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { Ioffering } from '../types';
+import { formatSettlementTime } from '../utils';
 
 const StyledModal = styled(Modal)(({ theme }) => ({
   display: 'flex',
@@ -50,24 +51,15 @@ const ExchangeTransactionModal: React.FC<ExchangeTransactionModalProps> = ({
   const [payinAmount, setPayinAmount] = useState('');
   const [payoutAmount, setPayoutAmount] = useState('');
 
-  const formatSettlementTime = (time: number) => {
-    if (time < 60) {
-      return `${time} minutes`;
-    } else {
-      const hours = Math.floor(time / 60);
-      const minutes = time % 60;
-      return `${hours} hours, ${minutes} minutes`;
-    }
-  };
 
   useEffect(() => {
     if (payinAmount) {
-      const payoutValue = parseFloat(payinAmount) * parseFloat(offering.exchangeRate?.split(' = ')[1]);
+      const payoutValue = parseFloat(payinAmount) * parseFloat(offering.data.payoutUnitsPerPayinUnit);
       setPayoutAmount(payoutValue.toFixed(2));
     } else {
       setPayoutAmount('');
     }
-  }, [payinAmount, offering.exchangeRate]);
+  }, [payinAmount, offering.data.payoutUnitsPerPayinUnit]);
 
   return (
     <StyledModal
@@ -80,45 +72,45 @@ const ExchangeTransactionModal: React.FC<ExchangeTransactionModalProps> = ({
         <Box mb={1}>
           <Grid container alignItems="center" spacing={1}>
             <Grid item>
-              <Typography variant="body1">{offering.payin?.currencyCode}</Typography>
+              <Typography variant="body1">{offering.data.payin?.currencyCode}</Typography>
             </Grid>
             <Grid item>
               <SwapHorizIcon />
             </Grid>
             <Grid item>
-              <Typography variant="body1">{offering?.payout?.currencyCode}</Typography>
+              <Typography variant="body1">{offering.data?.payout?.currencyCode}</Typography>
             </Grid>
           </Grid>
           <Typography variant="body1" id="exchange-transaction-modal-description">
-            {offering.description}
+            {offering.data.description}
           </Typography>
         </Box>
         <Divider />
         <Grid container spacing={4} mt={2}>
           <Grid item xs={12} md={6}>
             <TextField
-              label={`Amount in ${offering.payin?.currencyCode}`}
+              label={`Amount in ${offering.data.payin?.currencyCode}`}
               variant="outlined"
               fullWidth
               value={payinAmount}
               onChange={(e) => setPayinAmount(e.target.value)}
               InputProps={{
                 endAdornment: (
-                  <InputAdornment position="end">{offering.payin?.currencyCode}</InputAdornment>
+                  <InputAdornment position="end">{offering.data.payin?.currencyCode}</InputAdornment>
                 ),
               }}
             />
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label={`Amount in ${offering.payout?.currencyCode}`}
+              label={`Amount in ${offering.data.payout?.currencyCode}`}
               variant="outlined"
               fullWidth
               value={payoutAmount}
               disabled
               InputProps={{
                 endAdornment: (
-                  <InputAdornment position="end">{offering.payout?.currencyCode}</InputAdornment>
+                  <InputAdornment position="end">{offering.data.payout?.currencyCode}</InputAdornment>
                 ),
               }}
             />
@@ -127,17 +119,17 @@ const ExchangeTransactionModal: React.FC<ExchangeTransactionModalProps> = ({
             <Grid container alignItems="center" justifyContent="space-between">
               <Grid item>
                 <Typography variant="body2" color="textSecondary">
-                  Exchange Rate: {offering.exchangeRate}
+                  Exchange Rate: {offering.data.payoutUnitsPerPayinUnit}
                 </Typography>
               </Grid>
               <Grid item>
                 <Typography variant="body2" color="textSecondary">
-                  Settlement Time: {formatSettlementTime(offering.settlementTime)}
+                  Settlement Time: {formatSettlementTime(offering.data.payout.methods[0].estimatedSettlementTime)}
                 </Typography>
               </Grid>
               <Grid item>
                 <Typography variant="body2" color="textSecondary">
-                  Fee: {offering.fee * 100}%
+                  Fee: {Number(offering.data.payoutUnitsPerPayinUnit) * 100}%
                 </Typography>
               </Grid>
             </Grid>

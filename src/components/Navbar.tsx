@@ -5,12 +5,7 @@ import {
   BottomNavigationAction,
   Paper,
   Fab,
-  Popper,
   ClickAwayListener,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   Box,
   Typography,
   Grid,
@@ -58,7 +53,6 @@ const CenterButton = styled(Fab)(({ theme }) => ({
 const NavBar: React.FC = () => {
   const [value, setValue] = useState("home");
   const [open, setOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -89,7 +83,7 @@ const NavBar: React.FC = () => {
             label="Home"
             value="home"
             icon={<HomeIcon />}
-            onClick={() => handleNavigate("/")}
+            onClick={() => handleNavigate("/dashboard")}
           />
           <StyledBottomNavigationAction
             label="Transactions"
