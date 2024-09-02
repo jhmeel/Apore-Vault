@@ -187,7 +187,7 @@ const Signup: React.FC = () => {
           />
           <path fill="none" d="M2 2h44v44H2z" />
         </svg>
-        Sign in with Google
+        Sign up with Google
       </FederatedButton>
 
       <Divider style={{ width: "100%", margin: "20px 0" }}>or</Divider>

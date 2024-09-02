@@ -27,6 +27,7 @@ import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import { Ioffering, ILiquidityProvider } from "../types";
 import { useUserActions } from "../actions";
 import { formatSettlementTime } from "../utils";
+import toast from "react-hot-toast";
 
 const PageContainer = styled(Container)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -52,7 +53,7 @@ const OfferingListItem = styled(ListItem)(({ theme }) => ({
   },
 }));
 
-const StyledModal = styled(Modal)(({ theme }) => ({
+const StyledModal = styled(Modal)(() => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -105,7 +106,7 @@ const Xender: React.FC = () => {
   }, [getLiquidityProviders]);
 
   useEffect(() => {
-    // Check if there's an offering in the location state
+    // Check if there's an offering in the location state coming from redirect
     if (location.state && location.state.offering) {
       setSelectedOffering(location.state.offering);
       setIsModalOpen(true);
@@ -128,14 +129,25 @@ const Xender: React.FC = () => {
   };
 
   const handleSendConfirm = () => {
-    // Implement send confirmation logic here
-    console.log(
-      "Sending",
-      sendAmount,
-      selectedOffering?.data.payin?.currencyCode,
-      "to",
-      recipientAddress
-    );
+    
+    try{
+
+      console.log(
+        "Sending",
+        sendAmount,
+        selectedOffering?.data.payin?.currencyCode,
+        "to",
+        recipientAddress
+      );
+      
+      
+    }catch(err:any){
+      toast.error(err.message)
+    }
+
+
+
+
     handleModalClose();
   };
 

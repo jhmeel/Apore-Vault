@@ -1,6 +1,6 @@
 import React, { useState, FormEvent } from 'react';
 import { Typography, Divider } from '@mui/material';
-import { FormContainer, StyledTextField, StyledButton, Logo, FederatedButton } from './shared.js';
+import { FormContainer, StyledTextField, StyledButton, Logo, FederatedButton } from './shared';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';

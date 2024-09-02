@@ -96,7 +96,9 @@ export const holdings: IHolding[] = [
 ];
 
 
-export const formatSettlementTime = (time: number) => {
+export const formatSettlementTime = (time?: number) => {
+  if(!time) return 0;
+  
   if (time < 60) {
     return `${time} minutes`;
   } else {

@@ -12,7 +12,9 @@ import {
 } from '@mui/material';
 import { Ioffering } from '../types';
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
-const StyledModal = styled(Modal)(({ theme }) => ({
+import { formatSettlementTime } from '../utils';
+
+const StyledModal = styled(Modal)(() => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -45,16 +47,6 @@ const MainTxModal: React.FC<MainTxModalProps> = ({
   onConfirm,
 }) => {
   if (!offering) return null;
-
-  const formatSettlementTime = (time: number) => {
-    if (time < 60) {
-      return `${time} minutes`;
-    } else {
-      const hours = Math.floor(time / 60);
-      const minutes = time % 60;
-      return `${hours} hours, ${minutes} minutes`;
-    }
-  };
 
   return (
     <StyledModal

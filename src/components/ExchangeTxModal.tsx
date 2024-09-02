@@ -14,7 +14,7 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { Ioffering } from '../types';
 import { formatSettlementTime } from '../utils';
 
-const StyledModal = styled(Modal)(({ theme }) => ({
+const StyledModal = styled(Modal)(() => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -50,7 +50,6 @@ const ExchangeTransactionModal: React.FC<ExchangeTransactionModalProps> = ({
 
   const [payinAmount, setPayinAmount] = useState('');
   const [payoutAmount, setPayoutAmount] = useState('');
-
 
   useEffect(() => {
     if (payinAmount) {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import { useContext } from "react";
 import { UserContext } from "./context/UserContext";
@@ -5,6 +6,7 @@ import liquidityProviders from "./liquidityProvider.js";
 import {
   IBlogPost,
   ICustomerCredentialProps,
+  IExchangeProps,
   IHolding,
   ILiquidityProvider,
   Ioffering,
@@ -25,6 +27,7 @@ import toast from "react-hot-toast";
 import { BearerDid, DidDht } from "@web5/dids";
 import {
   Close,
+  Offering,
   Order,
   OrderStatus,
   Quote,
@@ -32,9 +35,12 @@ import {
   TbdexHttpClient,
 } from "@tbdex/http-client";
 import localforage from "localforage";
+import { Jwt, PresentationExchange } from '@web5/credentials'
+import { useAuth } from "./context/AuthContext.js";
 
 export const useUserActions = () => {
   const { state, dispatch } = useContext(UserContext);
+  const { userDetails } = useAuth();
 
   const toggleTheme = () => dispatch({ type: "TOGGLE_THEME" });
 
@@ -193,15 +199,13 @@ export const useUserActions = () => {
     try {
       const userDocRef = doc(db, "users", userId);
       const userDoc = await getDoc(userDocRef);
-      if(userDoc.data()?.did){
-        return
+      if (userDoc.data()?.did) {
+        return;
       }
       const userDid = await DidDht.create({ options: { publish: true } });
 
       const exportedDid = await userDid.export();
       const did = JSON.stringify(exportedDid);
-
-     
 
       await updateDoc(userDocRef, {
         did: did,
@@ -235,50 +239,6 @@ export const useUserActions = () => {
     } catch (error: any) {
       toast.error(`Error getting credentials: ${error.message}`);
     }
-  };
-
-  interface ITxPayload {
-    amount: number;
-    type: any;
-    reciepientAddress: string;
-    paymentDetails: any;
-  }
-
-  interface IRFQProps {
-    selectedOffering: Ioffering;
-    provider: ILiquidityProvider;
-    credentials: any; // Array of signed VCs required by the PFI
-    userDID: string;
-    txPayload: any;
-  }
-  const createRFQ = async (RFQProps: IRFQProps) => {
-    // const rfq = Rfq.create({
-    //     metadata: {
-    //       to: RFQProps.provider.did,
-    //       from: RFQProps.userDID,
-    //       protocol: '1.0'
-    //     },
-    //     data: {
-    //       offeringId: RFQProps.selectedOffering.id,
-    //       payin: {
-    //         kind: 'DEBIT_CARD',
-    //         amount: '500.65',
-    //         paymentDetails: {
-    //           cardNumber: '1234567890123456',
-    //           expiryDate: '05/25',
-    //           cardHolderName: 'Alice Doe',
-    //           cvv: '123'
-    //         }
-    //       },
-    //       payout: {
-    //         kind: 'BTC_ADDRESS',
-    //         paymentDetails: {
-    //           btcAddress: BTC_ADDRESS
-    //         }
-    //       },
-    //       claims: RFQProps.credentials
-    //     }
-    //   });
   };
 
   const findMatchingPairs = async (
@@ -316,7 +276,9 @@ export const useUserActions = () => {
     }
   };
 
-  const getOfferingsByDID = async (did: string): Promise<Ioffering[] | null> => {
+  const getOfferingsByDID = async (
+    did: string
+  ): Promise<Ioffering[] | null> => {
     try {
       const cachedOfferings = await localforage.getItem<string>(did);
       if (cachedOfferings) {
@@ -332,7 +294,6 @@ export const useUserActions = () => {
       return null;
     }
   };
-  
 
   const unCacheOfferings = async (did: string) => {
     try {
@@ -415,37 +376,37 @@ export const useUserActions = () => {
     return quote;
   };
 
-  const createAndSubmitClose = async (customerDid: BearerDid, quote: Quote) => {
+  const createAndSubmitClose = async (quote: Quote, reason:string) => {
     try {
       const close = Close.create({
         metadata: {
-          from: customerDid.uri,
+          from: userDetails?.did ,
           to: quote.metadata.from,
           exchangeId: quote.metadata.exchangeId,
           protocol: "1.0",
         },
-        data: { reason: "Canceled by customer" },
+        data: { reason },
       });
 
-      await close.sign(customerDid);
+      await close.sign(userDetails?.did);
       await TbdexHttpClient.submitClose(close);
     } catch (error: any) {
       console.error(`Error creating and submitting close: ${error.message}`);
     }
   };
 
-  const placeOrder = async (customerDid: any, quote: Quote): Promise<Order> => {
+  const placeOrder = async (quote: Quote): Promise<Order> => {
     try {
       const order = Order.create({
         metadata: {
-          from: customerDid.uri,
+          from: userDetails?.did,
           to: quote.metadata.from,
           exchangeId: quote.metadata.exchangeId,
           protocol: "1.0",
         },
       });
 
-      await order.sign(customerDid);
+      await order.sign(userDetails?.did);
       await TbdexHttpClient.submitOrder(order);
 
       return order;
@@ -524,7 +485,9 @@ export const useUserActions = () => {
     }
   };
 
-  const getLiquidityProviders = async (): Promise<ILiquidityProvider[] | null> => {
+  const getLiquidityProviders = async (): Promise<
+    ILiquidityProvider[] | null
+  > => {
     try {
       const providers = await Promise.all(
         liquidityProviders.map(async (provider) => {
@@ -538,16 +501,162 @@ export const useUserActions = () => {
         })
       );
 
-  
       return providers;
     } catch (error: any) {
       toast.error("Error getting liquidity providers:", error.message);
       return null;
     }
   };
+  const generateExchangeStatusValues = (exchangeMessage: any) => {
+    if (exchangeMessage instanceof Close) {
+      if (
+        exchangeMessage?.data?.reason?.toLowerCase().includes("complete") ||
+        exchangeMessage.data.reason?.toLowerCase().includes("success")
+      ) {
+        return "completed";
+      } else if (
+        exchangeMessage.data.reason?.toLowerCase().includes("expired")
+      ) {
+        return exchangeMessage.data.reason.toLowerCase();
+      } else if (
+        exchangeMessage.data.reason?.toLowerCase().includes("cancelled")
+      ) {
+        return "cancelled";
+      } else {
+        return "failed";
+      }
+    }
+    return exchangeMessage.kind;
+  };
+
+  const formatMessages = (exchanges: any) => {
+    const formattedMessages = exchanges.map((exchange) => {
+      const latestMessage = exchange[exchange.length - 1];
+      const rfqMessage = exchange.find((message) => message.kind === "rfq");
+      const quoteMessage = exchange.find((message) => message.kind === "quote");
+      // console.log('quote', quoteMessage)
+      const status = generateExchangeStatusValues(latestMessage);
+      const fee = quoteMessage?.data["payin"]?.["fee"];
+      const payinAmount = quoteMessage?.data["payin"]?.["amount"];
+      const payoutPaymentDetails =
+        rfqMessage.privateData?.payout.paymentDetails;
+      return {
+        id: latestMessage.metadata.exchangeId,
+        payinAmount:
+          (fee
+            ? Number(payinAmount) + Number(fee)
+            : Number(payinAmount)
+          ).toString() || rfqMessage.data["payinAmount"],
+        payinCurrency: quoteMessage.data["payin"]?.["currencyCode"] ?? null,
+        payoutAmount: quoteMessage?.data["payout"]?.["amount"] ?? null,
+        payoutCurrency: quoteMessage.data["payout"]?.["currencyCode"],
+        status,
+        createdTime: rfqMessage.createdAt,
+        ...(latestMessage.kind === "quote" && {
+          expirationTime: quoteMessage.data["expiresAt"] ?? null,
+        }),
+        from: "You",
+        to:
+          payoutPaymentDetails?.address ||
+          payoutPaymentDetails?.accountNumber +
+            ", " +
+            payoutPaymentDetails?.bankName ||
+          payoutPaymentDetails?.phoneNumber +
+            ", " +
+            payoutPaymentDetails?.networkProvider ||
+          "Unknown",
+        pfiDid: rfqMessage.metadata.to,
+      };
+    });
+
+    return formattedMessages;
+  };
+
+  const fetchExchange = async (pfiDID: string) => {
+    const exchanges = await TbdexHttpClient.getExchanges({
+      pfiDid: pfiDID,
+      did: userDetails?.did,
+    });
+    const mappedExchanges = formatMessages(exchanges);
+    return mappedExchanges;
+  };
+
+  const updateExchanges = (newTransactions) => {
+   
+
   
+};
+
+
+  const pollExchanges = () => {
+    const fetchAllExchanges = async () => {
+      console.log('Polling exchanges again...');
+      if(!userDetails?.did) return
+      const allExchanges = []
+      try {
+        for (const pfi of liquidityProviders) {
+          const exchanges = await fetchExchange(pfi.did);
+          allExchanges.push(...exchanges)
+        }
+        console.log('All exchanges:', allExchanges);
+        updateExchanges(allExchanges.reverse());
+        
+      } catch (error) {
+        console.error('Failed to fetch exchanges:', error);
+      }
+    };
+
+    // Run the function immediately
+    fetchAllExchanges();
+
+    // Set up the interval to run the function periodically
+    setInterval(fetchAllExchanges, 5000); // Poll every 5 seconds
+  };
+
+
+  const createExchange = async (exchangeProps: IExchangeProps) => {
+    const selectedCredentials = PresentationExchange.selectCredentials({
+      vcJwts: exchangeProps.credentials,
+      presentationDefinition:
+        exchangeProps.selectedOffering.data.requiredClaims,
+    });
+
+    try {
+      const rfq = Rfq.create({
+        metadata: {
+          to: exchangeProps.selectedOffering.metadata.from,
+          from: userDetails?.did,
+          protocol: "1.0",
+        },
+        data: {
+          offeringId: exchangeProps.selectedOffering.metadata.id,
+          payin: {
+            kind: exchangeProps.selectedOffering.data.payin.kind,
+            amount: exchangeProps.txPayload.amount,
+            paymentDetails: {},
+          },
+          payout: {
+            kind: exchangeProps.selectedOffering.data.payout.kind,
+            paymentDetails: {},
+          },
+          claims: selectedCredentials,
+        },
+      });
+
+      await rfq.verifyOfferingRequirements(
+        exchangeProps.selectedOffering as unknown as Offering
+      );
+
+      await rfq.sign(userDetails?.did);
+
+      await TbdexHttpClient.createExchange(rfq);
+
+      
+    } catch (err: any) {}
+  };
   return {
     state,
+    createExchange,
     toggleTheme,
     processOrder,
     fetchQuoteFromExchange,
@@ -564,7 +673,6 @@ export const useUserActions = () => {
     getDID,
     disableNotification,
     getCredentials,
-    createRFQ,
     notifyUser,
     getHoldings,
     createTxRecord,

@@ -45,6 +45,7 @@ const OfferingsList: React.FC<OfferingsListProps> = ({ onOfferingSelect }) => {
   useEffect(() => {
     const fetchProviders = async () => {
       const result = await getLiquidityProviders();
+      console.log(result)
       setProviders(result);
     };
 
