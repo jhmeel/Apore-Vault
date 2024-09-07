@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 import { styled } from "@mui/material/styles";
 import {
@@ -41,11 +42,11 @@ interface OfferingsListProps {
 const OfferingsList: React.FC<OfferingsListProps> = ({ onOfferingSelect }) => {
   const { getLiquidityProviders } = useUserActions();
   const [providers, setProviders] = useState<ILiquidityProvider[] | null>(null);
+  
 
   useEffect(() => {
     const fetchProviders = async () => {
       const result = await getLiquidityProviders();
-      console.log(result)
       setProviders(result);
     };
 
@@ -80,7 +81,7 @@ const OfferingsList: React.FC<OfferingsListProps> = ({ onOfferingSelect }) => {
 
   return (
     <Grid container spacing={4}>
-      {providers?.length > 0 &&
+      {providers && providers?.length > 0 &&
         providers.map((provider: ILiquidityProvider) => (
           <Grid item xs={12} sm={6} key={provider.did}>
             <StyledCard>

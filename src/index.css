@@ -17,10 +17,6 @@ a {
   text-decoration: none;
 }
 
-::-webkit-scrollbar{
-  display: none;
-}
-
 /* signup.css */
 .custom-phone-input {
   width: 100% !important;
@@ -37,4 +33,24 @@ a {
 
 .react-tel-input .selected-flag {
   border-radius: 4px 0 0 4px !important;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+  border-radius: 2px;
+  cursor: all-scroll;
+}
+
+::-webkit-scrollbar-track {
+  background: #dddddd;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #176984;
+  border-radius: 50px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #176884;
 }

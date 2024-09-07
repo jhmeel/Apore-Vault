@@ -9,7 +9,7 @@ export interface ILiquidityProvider {
 export type ITxType = "SEND" | "CONVERT" | "RECEIVE";
 
 export interface ITransaction {
-  id?: string;
+  reference?: string;
   from?: string;
   to?: string;
   type?: ITxType;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { styled } from "@mui/material/styles";
 import {
@@ -26,8 +26,9 @@ import StarIcon from "@mui/icons-material/Star";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import { Ioffering, ILiquidityProvider } from "../types";
 import { useUserActions } from "../actions";
-import { formatSettlementTime } from "../utils";
+import { formatSettlementTime, getExchangeAmount } from "../utils";
 import toast from "react-hot-toast";
+import ConfirmationDrawer from "../components/ConfirmationDrawer";
 
 const PageContainer = styled(Container)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -71,6 +72,7 @@ const ModalContent = styled(Box)(({ theme }) => ({
     width: "100%",
   },
 }));
+
 const Xender: React.FC = () => {
   const location = useLocation();
   const theme = useTheme();
@@ -84,34 +86,40 @@ const Xender: React.FC = () => {
   const [sendAmount, setSendAmount] = useState("");
   const { getLiquidityProviders } = useUserActions();
   const [providers, setProviders] = useState<ILiquidityProvider[] | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerData, setDrawerData] = useState<{
+    amount: string;
+    recipientAddress: string;
+    offering: Ioffering | null;
+  } | null>(null);
 
-  const [payoutAmount, setPayoutAmount] = useState("");
-  useEffect(() => {
-    if (sendAmount) {
-      const payoutValue =
-        parseFloat(sendAmount) *
-        parseFloat(selectedOffering?.data.payoutUnitsPerPayinUnit);
-      setPayoutAmount(payoutValue.toFixed(2));
-    } else {
-      setPayoutAmount("");
+  const payoutAmount = useMemo(() => {
+    if (sendAmount && selectedOffering) {
+      return getExchangeAmount(sendAmount, selectedOffering);
     }
-  }, [sendAmount, selectedOffering?.data.payoutUnitsPerPayinUnit]);
+    return "";
+  }, [sendAmount, selectedOffering]);
+
   useEffect(() => {
     const fetchProviders = async () => {
-      const result = await getLiquidityProviders();
-      setProviders(result);
+      try {
+        const result = await getLiquidityProviders();
+        setProviders(result);
+      } catch (error) {
+        console.error("Error fetching liquidity providers:", error);
+        toast.error("Failed to fetch liquidity providers");
+      }
     };
 
     fetchProviders();
   }, [getLiquidityProviders]);
 
   useEffect(() => {
-    // Check if there's an offering in the location state coming from redirect
     if (location.state && location.state.offering) {
       setSelectedOffering(location.state.offering);
       setIsModalOpen(true);
     }
-  }, [location]);
+  }, [location.state]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -128,36 +136,51 @@ const Xender: React.FC = () => {
     setSendAmount("");
   };
 
-  const handleSendConfirm = () => {
-    
-    try{
+  const handleDrawerClose = () => {
+    setIsDrawerOpen(false);
+    setDrawerData(null);
+  };
 
+  const handleSendConfirm = () => {
+    if (!selectedOffering) {
+      toast.error("No offering selected");
+      return;
+    }
+
+    try {
+      setDrawerData({
+        amount: sendAmount,
+        recipientAddress,
+        offering: selectedOffering,
+      });
+      setIsDrawerOpen(true);
       console.log(
         "Sending",
         sendAmount,
-        selectedOffering?.data.payin?.currencyCode,
+        selectedOffering.data.payin?.currencyCode,
         "to",
         recipientAddress
       );
-      
-      
-    }catch(err:any){
-      toast.error(err.message)
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("An unknown error occurred");
+      }
     }
-
-
-
 
     handleModalClose();
   };
 
-  const filteredOfferings = providers?.flatMap((provider) =>
-    provider.offerings?.filter((offering) =>
-      offering.data.payin?.currencyCode
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    )
-  );
+  const filteredOfferings = useMemo(() => {
+    return providers?.flatMap((provider) =>
+      provider.offerings?.filter((offering: Ioffering) =>
+        offering.data.payin?.currencyCode
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      )
+    ) || [];
+  }, [providers, searchTerm]);
 
   return (
     <PageContainer maxWidth="md" style={{ paddingBottom: "65px" }}>
@@ -180,7 +203,7 @@ const Xender: React.FC = () => {
       />
       <Paper elevation={3} sx={{ borderRadius: 2, overflow: "hidden" }}>
         <List disablePadding>
-          {filteredOfferings?.map((offering: Ioffering, index) => (
+          {filteredOfferings.map((offering: Ioffering, index) => (
             <OfferingListItem
               key={offering.metadata.id}
               button
@@ -214,12 +237,13 @@ const Xender: React.FC = () => {
                           />
                         }
                         label={providers
-                          ?.filter((p) =>
+                          ?.find((p: ILiquidityProvider) =>
                             p.offerings?.some(
-                              (off) => off.signature == offering.signature
+                              (off: Ioffering) =>
+                                off.signature === offering.signature
                             )
-                          )[0]
-                          .rating?.toFixed(1)}
+                          )
+                          ?.rating?.toFixed(1)}
                         size="small"
                         sx={{
                           mr: 1,
@@ -228,11 +252,12 @@ const Xender: React.FC = () => {
                       />
                       <Typography variant="body2" color="textSecondary">
                         {
-                          providers?.filter((p) =>
+                          providers?.find((p: ILiquidityProvider) =>
                             p.offerings?.some(
-                              (off) => off.signature == offering.signature
+                              (off: Ioffering) =>
+                                off.signature === offering.signature
                             )
-                          )[0].name
+                          )?.name
                         }
                       </Typography>
                     </Box>
@@ -312,7 +337,8 @@ const Xender: React.FC = () => {
               Fee:{" "}
               {selectedOffering?.data.payoutUnitsPerPayinUnit
                 ? (
-                    Number(selectedOffering?.data.payoutUnitsPerPayinUnit) * 100
+                    (1 - Number(selectedOffering.data.payoutUnitsPerPayinUnit)) *
+                    100
                   ).toFixed(2)
                 : 0}
               %
@@ -344,6 +370,14 @@ const Xender: React.FC = () => {
           </Box>
         </ModalContent>
       </StyledModal>
+      <ConfirmationDrawer
+        open={isDrawerOpen}
+        txType="SEND"
+        amount={drawerData?.amount || ""}
+        recipientAddress={drawerData?.recipientAddress || ""}
+        offering={drawerData?.offering || null}
+        onClose={handleDrawerClose}
+      />
     </PageContainer>
   );
 };

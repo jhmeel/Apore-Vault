@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import CryptoJS from 'crypto-js';
-import { Currency } from './types';
+import { Currency, Ioffering } from './types';
 
 export const formatAmount = (amount: number) => {
   if (Math.abs(amount) >= 1) {
@@ -107,3 +107,8 @@ export const formatSettlementTime = (time?: number) => {
     return `${hours} hours, ${minutes} minutes`;
   }
 };
+
+export const getExchangeAmount = (amount:string, offering:Ioffering)=>{
+  const exchAmout = parseFloat(amount) * parseFloat(offering?.data.payoutUnitsPerPayinUnit)
+  return exchAmout.toFixed(2)
+}

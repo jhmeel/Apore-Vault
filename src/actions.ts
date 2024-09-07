@@ -35,7 +35,7 @@ import {
   TbdexHttpClient,
 } from "@tbdex/http-client";
 import localforage from "localforage";
-import { Jwt, PresentationExchange } from '@web5/credentials'
+import { Jwt, PresentationExchange } from "@web5/credentials";
 import { useAuth } from "./context/AuthContext.js";
 
 export const useUserActions = () => {
@@ -114,11 +114,7 @@ export const useUserActions = () => {
 
       const data = userDoc.data();
       const txHistory: ITransaction[] = data?.transactionHistory || [];
-
-      dispatch({
-        type: "GET_TX_HISTORY",
-        payload: txHistory,
-      });
+      return txHistory;
     } catch (error: any) {
       toast.error(`Error getting transactions history:  ${error.message}`);
     }
@@ -142,8 +138,6 @@ export const useUserActions = () => {
         });
       }
 
-      // update local state
-      await getTxHistory(userId);
     } catch (error: any) {
       toast.error(`Error creating transaction record: ${error.message}`);
     }
@@ -376,11 +370,11 @@ export const useUserActions = () => {
     return quote;
   };
 
-  const createAndSubmitClose = async (quote: Quote, reason:string) => {
+  const createAndSubmitClose = async (quote: Quote, reason: string) => {
     try {
       const close = Close.create({
         metadata: {
-          from: userDetails?.did ,
+          from: userDetails?.did,
           to: quote.metadata.from,
           exchangeId: quote.metadata.exchangeId,
           protocol: "1.0",
@@ -581,28 +575,22 @@ export const useUserActions = () => {
     return mappedExchanges;
   };
 
-  const updateExchanges = (newTransactions) => {
-   
-
-  
-};
-
+  const updateExchanges = (newTransactions) => {};
 
   const pollExchanges = () => {
     const fetchAllExchanges = async () => {
-      console.log('Polling exchanges again...');
-      if(!userDetails?.did) return
-      const allExchanges = []
+      console.log("Polling exchanges again...");
+      if (!userDetails?.did) return;
+      const allExchanges = [];
       try {
         for (const pfi of liquidityProviders) {
           const exchanges = await fetchExchange(pfi.did);
-          allExchanges.push(...exchanges)
+          allExchanges.push(...exchanges);
         }
-        console.log('All exchanges:', allExchanges);
+        console.log("All exchanges:", allExchanges);
         updateExchanges(allExchanges.reverse());
-        
       } catch (error) {
-        console.error('Failed to fetch exchanges:', error);
+        console.error("Failed to fetch exchanges:", error);
       }
     };
 
@@ -612,7 +600,6 @@ export const useUserActions = () => {
     // Set up the interval to run the function periodically
     setInterval(fetchAllExchanges, 5000); // Poll every 5 seconds
   };
-
 
   const createExchange = async (exchangeProps: IExchangeProps) => {
     const selectedCredentials = PresentationExchange.selectCredentials({
@@ -650,8 +637,6 @@ export const useUserActions = () => {
       await rfq.sign(userDetails?.did);
 
       await TbdexHttpClient.createExchange(rfq);
-
-      
     } catch (err: any) {}
   };
   return {
