@@ -23,22 +23,18 @@ import ForgottenPassword from "./pages/Auth/ForgottenPassword";
 import Checkin from "./pages/Auth/Checkin";
 import AutoLogout from "./pages/Auth/AutoLogout";
 import { UserProvider, useWallet } from "./context/UserContext";
-
+import { useUserActions } from "./actions";
+import { NoificationType } from "./types";
 
 function App() {
   const { pathname } = useLocation();
   const { toasts } = useToasterStore();
-  const {state} = useWallet()
-  
+  const { state } = useWallet();
+  const [mode, setMode] = useState<"light" | "dark">(state.theme);
+  const { notifyUser } = useUserActions();
 
-  const [mode, setMode] = useState<"light" | "dark">("dark");
-  
   const theme = useMemo(() => getTheme(mode), [mode]);
 
-  const toggleTheme = () => {
-    setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
-  };
-  
 
   useEffect(() => {
     window.scrollTo({
@@ -90,32 +86,39 @@ function App() {
         {/* <AutoLogout/> */}
         <AuthProvider>
           <UserProvider>
-          <Suspense fallback={<MainLoader />}>{!["/auth/login", "/auth/forgot-password", "/auth/signup","/auth/checkin", "/"].includes(pathname) && (
-          <>
-                <NavBar />
-          </>
-        )}
-      
-            <Routes>
-              <Route path="/auth/signup" element={<Signup />}></Route>
-              <Route path="/auth/login" element={<Login />}></Route>
-              <Route
-                path="/auth/forgot-password"
-                element={<ForgottenPassword />}
-              ></Route>
-              <Route path="/" element={<Landing />}></Route>
-              <Route path="/auth/checkin" element={<Checkin />}></Route>
-              <Route path="/dashboard" element={<Dashboard />}></Route>
-              <Route path="/portfolio" element={<Portfolio />}></Route>
-              <Route path="/converter" element={<Converter />}></Route>
-              <Route path="/xender" element={<Xender />}></Route>
-              <Route path="/receiver" element={<Receiver />}></Route>
-              <Route path="/txhistory" element={<Txhistory />}></Route>
-              <Route path="/explore" element={<Blog />}></Route>
-              <Route path="/verify" element={<Verification />}></Route>
-              <Route path="/setting" element={<Setting />}></Route>
-            </Routes>
-          </Suspense>
+            <Suspense fallback={<MainLoader />}>
+              {![
+                "/auth/login",
+                "/auth/forgot-password",
+                "/auth/signup",
+                "/auth/checkin",
+                "/",
+              ].includes(pathname) && (
+                <>
+                  <NavBar />
+                </>
+              )}
+
+              <Routes>
+                <Route path="/auth/signup" element={<Signup />}></Route>
+                <Route path="/auth/login" element={<Login />}></Route>
+                <Route
+                  path="/auth/forgot-password"
+                  element={<ForgottenPassword />}
+                ></Route>
+                <Route path="/" element={<Landing />}></Route>
+                <Route path="/auth/checkin" element={<Checkin />}></Route>
+                <Route path="/dashboard" element={<Dashboard />}></Route>
+                <Route path="/portfolio" element={<Portfolio />}></Route>
+                <Route path="/converter" element={<Converter />}></Route>
+                <Route path="/xender" element={<Xender />}></Route>
+                <Route path="/receiver" element={<Receiver />}></Route>
+                <Route path="/txhistory" element={<Txhistory />}></Route>
+                <Route path="/explore" element={<Blog />}></Route>
+                <Route path="/verify" element={<Verification />}></Route>
+                <Route path="/setting" element={<Setting />}></Route>
+              </Routes>
+            </Suspense>
           </UserProvider>
         </AuthProvider>
       </ThemeProvider>

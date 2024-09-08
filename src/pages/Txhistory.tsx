@@ -32,7 +32,7 @@ import html2canvas from "html2canvas";
 import { ITransaction } from "../types";
 import { useAuth } from "../context/AuthContext";
 import { useUserActions } from "../actions";
-import logoImg from '../assets/logo.png';
+import logoImg from "../assets/logo.png";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   fontWeight: "bold",
@@ -41,13 +41,13 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  '&:nth-of-type(odd)': {
+  "&:nth-of-type(odd)": {
     backgroundColor: theme.palette.action.hover,
   },
-  '&:hover': {
+  "&:hover": {
     backgroundColor: theme.palette.action.selected,
   },
-  cursor: 'pointer',
+  cursor: "pointer",
 }));
 
 const StatusChip = styled(Chip)<{ status: string }>(({ theme, status }) => ({
@@ -59,7 +59,7 @@ const StatusChip = styled(Chip)<{ status: string }>(({ theme, status }) => ({
       : theme.palette.error.main,
   color: theme.palette.common.white,
   fontSize: 10,
-  fontWeight: 'bold',
+  fontWeight: "bold",
 }));
 
 const DetailItem = styled(Box)(({ theme }) => ({
@@ -93,15 +93,17 @@ const DownloadButton = styled(Button)(({ theme }) => ({
   marginTop: theme.spacing(2),
 }));
 
-const Logo = styled('img')({
-  width: '100px',
-  height: 'auto',
-  marginBottom: '20px',
+const Logo = styled("img")({
+  width: "100px",
+  height: "auto",
+  marginBottom: "20px",
 });
 
 const Txhistory: React.FC = () => {
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
-  const [filteredTransactions, setFilteredTransactions] = useState<ITransaction[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    ITransaction[]
+  >([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTx, setSelectedTx] = useState<ITransaction | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -112,7 +114,6 @@ const Txhistory: React.FC = () => {
   const { getTxHistory } = useUserActions();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -129,7 +130,7 @@ const Txhistory: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    const filtered = transactions.filter(
+    const filtered = transactions?.filter(
       (tx) =>
         tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         tx.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -171,19 +172,24 @@ const Txhistory: React.FC = () => {
       await new Promise((resolve) => {
         logo.onload = resolve;
       });
-      
-      const ctx = canvas.getContext('2d');
+
+      const ctx = canvas.getContext("2d");
       if (ctx) {
         // Add logo
         const logoWidth = 100;
         const logoHeight = (logo.height / logo.width) * logoWidth;
-        ctx.drawImage(logo, (canvas.width - logoWidth) / 2, 20, logoWidth, logoHeight);
-        
-       
-        ctx.font = '12px Arial';
-        ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
-        ctx.textAlign = 'center';
-        ctx.fillText('Apore Vault', canvas.width / 2, canvas.height - 20);
+        ctx.drawImage(
+          logo,
+          (canvas.width - logoWidth) / 2,
+          20,
+          logoWidth,
+          logoHeight
+        );
+
+        ctx.font = "12px Arial";
+        ctx.fillStyle = "rgba(200, 200, 200, 0.5)";
+        ctx.textAlign = "center";
+        ctx.fillText("Apore Vault", canvas.width / 2, canvas.height - 20);
       }
 
       const link = document.createElement("a");
@@ -196,7 +202,12 @@ const Txhistory: React.FC = () => {
   const renderTransactionList = () => {
     if (loading) {
       return (
-        <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="200px"
+        >
           <CircularProgress />
         </Box>
       );
@@ -205,7 +216,9 @@ const Txhistory: React.FC = () => {
     if (!filteredTransactions?.length) {
       return (
         <Fade in={true} timeout={1000}>
-          <Typography variant="body1" align="center">No Transactions found :(</Typography>
+          <Typography variant="body1" align="center">
+            No Transactions found :(
+          </Typography>
         </Fade>
       );
     }
@@ -226,7 +239,7 @@ const Txhistory: React.FC = () => {
                         {tx.amount} {tx.currencyCode}
                       </Typography>
                       <Typography variant="body2" color="textSecondary">
-                        {tx.timestamp?.toLocaleString()}
+                        {tx.timestamp?.toDate().toLocaleString()}
                       </Typography>
                       <Box
                         display="flex"
@@ -234,7 +247,7 @@ const Txhistory: React.FC = () => {
                         alignItems="center"
                         mt={1}
                       >
-                        <Typography variant="body2">{tx.description}</Typography>
+                        <Typography variant="body2">{tx.narration}</Typography>
                         <StatusChip
                           label={tx.status}
                           status={tx.status}
@@ -260,7 +273,7 @@ const Txhistory: React.FC = () => {
               <StyledTableCell>Amount</StyledTableCell>
               <StyledTableCell>Currency</StyledTableCell>
               <StyledTableCell>Date</StyledTableCell>
-              <StyledTableCell>Description</StyledTableCell>
+              <StyledTableCell>Narration</StyledTableCell>
               <StyledTableCell>Status</StyledTableCell>
             </TableRow>
           </TableHead>
@@ -273,8 +286,8 @@ const Txhistory: React.FC = () => {
                 <TableCell>{tx.type}</TableCell>
                 <TableCell>{tx.amount}</TableCell>
                 <TableCell>{tx.currencyCode}</TableCell>
-                <TableCell>{tx.timestamp?.toLocaleString()}</TableCell>
-                <TableCell>{tx.description}</TableCell>
+                <TableCell>{tx.timestamp?.toDate().toLocaleString()}</TableCell>
+                <TableCell>{tx.narration}</TableCell>
                 <TableCell>
                   <StatusChip
                     label={tx.status}
@@ -300,7 +313,7 @@ const Txhistory: React.FC = () => {
         position: "relative",
       }}
     >
-     <Typography variant="h2" gutterBottom fontFamily="'Poppins', sans-serif">
+      <Typography variant="h2" gutterBottom fontFamily="'Poppins', sans-serif">
         Transaction History
       </Typography>
       <Box>
@@ -326,7 +339,7 @@ const Txhistory: React.FC = () => {
         onClose={handleCloseDrawer}
         PaperProps={{
           sx: {
-            width: isMobile ? '100%' : 400,
+            width: isMobile ? "100%" : 400,
             p: 3,
             overflowY: "auto",
           },
@@ -365,7 +378,7 @@ const Txhistory: React.FC = () => {
                 <DetailItem>
                   <DetailLabel variant="subtitle2">Date</DetailLabel>
                   <DetailValue variant="body1">
-                    {selectedTx.timestamp?.toLocaleString()}
+                    {selectedTx.timestamp?.toDate().toLocaleString()}
                   </DetailValue>
                 </DetailItem>
               </Grid>
@@ -381,27 +394,31 @@ const Txhistory: React.FC = () => {
               <Grid item xs={12}>
                 <DetailItem>
                   <DetailLabel variant="subtitle2">From</DetailLabel>
-                  <DetailValue variant="body1">{selectedTx.from}</DetailValue>
+                  <DetailValue variant="body1" className="hidden-scrollbar" style={{overflowX:'auto'}}>
+                    {selectedTx.type == "CONVERT"
+                      ? selectedTx.from
+                      : user?.displayName}
+                  </DetailValue>
                 </DetailItem>
               </Grid>
               <Grid item xs={12}>
                 <DetailItem>
                   <DetailLabel variant="subtitle2">To</DetailLabel>
-                  <DetailValue variant="body1">
+                  <DetailValue variant="body1" className="hidden-scrollbar" style={{overflowX:'auto'}}>
                     {selectedTx.to || "N/A"}
                   </DetailValue>
                 </DetailItem>
               </Grid>
               <Grid item xs={12}>
                 <DetailItem>
-                  <DetailLabel variant="subtitle2">Description</DetailLabel>
-                  <DetailValue variant="body1">
-                    {selectedTx.description}
+                  <DetailLabel variant="subtitle2">Narration</DetailLabel>
+                  <DetailValue variant="body1" className="hidden-scrollbar" style={{overflowX:'auto'}}>
+                    {selectedTx.narration}
                   </DetailValue>
                 </DetailItem>
               </Grid>
               <Grid item xs={12}>
-                <Box textAlign="center" mb={2}>
+                <Box textAlign="center" mb={2} className="hidden-scrollbar" style={{overflowX:'auto'}}>
                   <svg ref={barcodeRef}></svg>
                 </Box>
               </Grid>

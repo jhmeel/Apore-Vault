@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { styled, keyframes } from "@mui/material/styles";
 import {
@@ -17,12 +18,15 @@ import {
   Tooltip,
 } from "@mui/material";
 import toast from "react-hot-toast";
-import { Ioffering, ITxType } from "../types";
+import { Ioffering, ITransaction, ITxType } from "../types";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import { getExchangeAmount } from "../utils";
+import { useUserActions } from "../actions";
+import { NoificationType } from "../types";
+import { v4 as uuidv4 } from "uuid";
 
 const fadeIn = keyframes`
   from {
@@ -63,7 +67,10 @@ interface ConfirmationDrawerProps {
   offering: Ioffering | null;
   txType: ITxType;
   amount: string;
+  narration:string;
   recipientAddress?: string;
+  fromAddress?: string;
+  currencyCode?: string;
   onClose: () => void;
 }
 
@@ -72,12 +79,16 @@ const ConfirmationDrawer: React.FC<ConfirmationDrawerProps> = ({
   offering,
   txType,
   amount,
+  narration,
   recipientAddress,
+  fromAddress,
+  currencyCode,
   onClose,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
+  const { notifyUser, createTxRecord, updateTxStatus } = useUserActions();
 
   useEffect(() => {
     if (open) {
@@ -90,10 +101,35 @@ const ConfirmationDrawer: React.FC<ConfirmationDrawerProps> = ({
     try {
       setIsProcessing(true);
       setActiveStep(1);
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulating transaction processing
-      console.log(txType, amount, recipientAddress);
+
+      const txRef = uuidv4();
+      const tx: ITransaction = {
+        reference: txRef,
+        from: fromAddress || 'YOU',
+        to: recipientAddress,
+        type: txType,
+        amount: amount,
+        currencyCode,
+        timestamp: new Date(),
+        status: "processing",
+        narration,
+        data: "",
+        metadata: "",
+        liquidityProvider: offering?.metadata.from,
+      };
+
+      await createTxRecord(tx);
+
       setActiveStep(2);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      await updateTxStatus(txRef, "completed");
+      notifyUser({
+        id: uuidv4(),
+        type: NoificationType.TX_SUCCESS,
+        title: NoificationType.TX_SUCCESS,
+        content: "Your Transaction has been completed",
+      });
+
       setIsProcessing(false);
       onClose();
       toast.success("Transaction completed successfully!");
@@ -128,22 +164,39 @@ const ConfirmationDrawer: React.FC<ConfirmationDrawerProps> = ({
         </Stepper>
         <AnimatedDivider />
         <Box mb={2}>
-          <Grid container alignItems="center" spacing={2} justifyContent="center">
+          <Grid
+            container
+            alignItems="center"
+            spacing={2}
+            justifyContent="center"
+          >
             <Grid item>
-              <Typography variant="h5">{offering?.data.payin?.currencyCode}</Typography>
+              <Typography variant="h5">
+                {offering?.data.payin?.currencyCode}
+              </Typography>
             </Grid>
             <Grid item>
               <Fade in={true} timeout={800}>
-                {txType !== "CONVERT" ? <ArrowRightAltIcon fontSize="large" /> : <SwapHorizIcon fontSize="large" />}
+                {txType !== "CONVERT" ? (
+                  <ArrowRightAltIcon fontSize="large" />
+                ) : (
+                  <SwapHorizIcon fontSize="large" />
+                )}
               </Fade>
             </Grid>
             <Grid item>
-              <Typography variant="h5">{offering?.data?.payout?.currencyCode}</Typography>
+              <Typography variant="h5">
+                {offering?.data?.payout?.currencyCode}
+              </Typography>
             </Grid>
           </Grid>
           <Typography variant="body1" align="center" mt={2}>
             {txType === "CONVERT"
-              ? `Exchange ${amount} ${offering?.data?.payin?.currencyCode} for ${getExchangeAmount(amount, offering)} ${offering?.data?.payout?.currencyCode}`
+              ? `Exchange ${amount} ${
+                  offering?.data?.payin?.currencyCode
+                } for ${getExchangeAmount(amount, offering)} ${
+                  offering?.data?.payout?.currencyCode
+                }`
               : `Send ${amount} ${offering?.data?.payout?.currencyCode} to ${recipientAddress}`}
           </Typography>
         </Box>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import { Typography, Grid, Divider, MenuItem, styled } from "@mui/material";
 import {
@@ -299,9 +300,10 @@ const Signup: React.FC = () => {
         </StyledButton>
       </form>
 
-      <Typography style={{ marginTop: 20 }}>
+      <Typography variant="body2" style={{ marginTop: 20 }}>
         Already have an account?{" "}
         <Typography
+        variant="body2"
           component="span"
           color="primary"
           style={{ cursor: "pointer" }}

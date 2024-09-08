@@ -7,20 +7,20 @@ export interface ILiquidityProvider {
 }
 
 export type ITxType = "SEND" | "CONVERT" | "RECEIVE";
-
+export type ITxStatus =  "completed" | "processing" | "failed";
 export interface ITransaction {
   reference?: string;
-  from?: string;
   to?: string;
+  from?: string;
   type?: ITxType;
-  amount?: number;
+  amount?: string;
   currencyCode?: string;
   timestamp?: Date;
-  status: "completed" | "pending" | "failed";
-  description?: string;
+  status: ITxStatus;
+  narration?: string;
   data?: any;
   metadata?: any;
-  liquidityProvider?: ILiquidityProvider;
+  liquidityProvider?: string;
 }
 
 export interface IBlogPost {
@@ -37,6 +37,7 @@ export interface IUser {
   password: string;
   confirmPassword: string;
   fullName: string;
+  enabled2F?:boolean;
   dateOfBirth: string;
   country: string;
   accessPin?: string;
@@ -46,10 +47,20 @@ export interface IUser {
   idDocument: File | null;
 }
 
+export enum NoificationType {
+  SIGN_UP_SUCCESS = 'Sign up success',
+  LOG_IN_SUCCESS = 'Log in success',
+  TX_SUCCESS ='Transaction success',
+  TX_FAIL = 'Transaction fail',
+  EXCHANGE_SUCCESS = 'Exchange success',
+  EXCHANGE_FAIL= 'Exchange fail'
+  }
+
 export interface INotification {
   id: string;
-  icon?: React.ReactElement;
-  title: string;
+  type:NoificationType;
+  icon?: React.ReactNode;
+  title:NoificationType ;
   content: string;
 }
 
@@ -144,6 +155,7 @@ export interface IUserState {
   holdings: IHolding[];
   transactionHistory: ITransaction[];
   articles: IBlogPost[];
+  enabled2F: boolean;
   portfolioSummary: IPortfolioSummary;
 }
 

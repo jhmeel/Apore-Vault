@@ -7,7 +7,8 @@ export const FormContainer = styled(Paper)(({ theme }) => ({
   flexDirection: 'column',
   alignItems: 'center',
   minHeight:'100vh',
-  maxWidth: 500,
+  backgroundColor:'paper',
+  maxWidth: 600,
   margin: '40px auto',
   [theme.breakpoints.down('sm')]: {
     padding: theme.spacing(3),

@@ -178,7 +178,11 @@ const ExchangeTransactionModal: React.FC<ExchangeTransactionModalProps> = ({
         open={isDrawerOpen}
         txType="CONVERT"
         amount={payinAmount}
+        narration='Exchange'
+        fromAddress={offering?.data.payin.currencyCode}
         offering={offering}
+        recipientAddress={offering?.data.payout.currencyCode}
+        currencyCode={`${offering?.data.payin.currencyCode}/${offering?.data.payout.currencyCode}`}
         onClose={handleDrawerClose}
       />
     </>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import {
   Typography,
@@ -8,6 +9,8 @@ import {
   Link,
   Fade,
   Container,
+  CircularProgress,
+  IconButton,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
@@ -17,16 +20,20 @@ import { sendPasswordResetEmail } from "firebase/auth";
 import { db, auth } from "../../firebase";
 import toast from "react-hot-toast";
 import logoImg from "../../assets/logo.png";
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const PinInput = styled("input")(({ theme }) => ({
-  width: "60px",
+  width: "50px",
   height: "60px",
   fontSize: "28px",
   textAlign: "center",
   margin: "0 5px",
-  border: `2px solid ${theme.palette.primary.main}`,
-  borderRadius: "12px",
+  border: "none",
+  borderBottom: `2px solid ${theme.palette.primary.main}`,
   transition: "all 0.3s ease",
+  backgroundColor: "transparent",
+  color: theme.palette.text.primary,
   "&:focus": {
     outline: "none",
     borderColor: theme.palette.secondary.main,
@@ -40,11 +47,14 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   width: "100%",
   maxWidth: 450,
   borderRadius: "20px",
-  backgroundColor: theme.palette.background.default,
+  backgroundColor: theme.palette.background.paper,
+  boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
+  backdropFilter: "blur(4px)",
+  border: "1px solid rgba(255, 255, 255, 0.18)",
 }));
 
 const Logo = styled("img")({
-  width: "90px",
+  width: "120px",
   marginBottom: "20px",
 });
 
@@ -52,11 +62,14 @@ const StyledButton = styled("button")(({ theme }) => ({
   backgroundColor: theme.palette.primary.main,
   color: theme.palette.primary.contrastText,
   padding: "12px 24px",
-  fontSize: "16px",
+  fontSize: "14px",
   border: "none",
   borderRadius: "30px",
   cursor: "pointer",
   transition: "all 0.3s ease",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
   "&:hover": {
     backgroundColor: theme.palette.primary.dark,
     transform: "translateY(-2px)",
@@ -77,6 +90,7 @@ const Checkin: React.FC = () => {
   const [showConfirmPin, setShowConfirmPin] = useState(false);
   const [email, setEmail] = useState("");
   const [showForgotPin, setShowForgotPin] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkPin = async () => {
@@ -88,12 +102,15 @@ const Checkin: React.FC = () => {
       const userDoc = await getDoc(doc(db, "users", user?.uid));
       if (userDoc.exists() && userDoc.data().accessPin) {
         setHasPin(true);
+        setIsCreatingPin(false);
       } else {
+        setHasPin(false);
         setIsCreatingPin(true);
       }
+      setLoading(false);
     };
     checkPin();
-  }, [user]);
+  }, [user, navigate]);
 
   const handlePinChange = (
     index: number,
@@ -111,7 +128,7 @@ const Checkin: React.FC = () => {
       if (nextInput) nextInput.focus();
     }
 
-    if (!isConfirm && index === 3 && value !== "") {
+    if (isCreatingPin && !isConfirm && index === 3 && value !== "") {
       setShowConfirmPin(true);
     }
   };
@@ -122,18 +139,18 @@ const Checkin: React.FC = () => {
       const confirmedPin = confirmPin.join("");
       if (enteredPin !== confirmedPin) {
         toast.error("PINs do not match. Please try again.");
-        setConfirmPin(["", "", "", ""])
+        setConfirmPin(["", "", "", ""]);
         return;
       }
       try {
         await setDoc(
           doc(db, "users", user!.uid),
-          { accessPin: enteredPin },
+          { accessPin: enteredPin, enabled2F: true },
           { merge: true }
         );
-        toast.success("PIN created successfully");
+        toast.success("PIN created successfully and 2FA enabled");
         navigate("/dashboard");
-      } catch (error) {
+      } catch (error:any) {
         toast.error("Error creating PIN. Please try again.");
       }
     } else {
@@ -141,7 +158,7 @@ const Checkin: React.FC = () => {
         navigate("/dashboard");
       } else {
         toast.error("Incorrect PIN. Please try again.");
-        setPin(["", "", "", ""])
+        setPin(["", "", "", ""]);
       }
     }
   };
@@ -151,10 +168,18 @@ const Checkin: React.FC = () => {
       await sendPasswordResetEmail(auth, email);
       toast.success("Reset link sent to your email");
       setShowForgotPin(false);
-    } catch (error) {
+    } catch (error:any) {
       toast.error("Error sending reset link. Please try again.");
     }
   };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Container
@@ -168,78 +193,75 @@ const Checkin: React.FC = () => {
       }}
     >
       <Logo src={logoImg} alt="Apore" />
-      <Typography
-        variant="h5"
-        gutterBottom fontFamily="'Poppins', sans-serif"
-        sx={{ fontWeight: "bold", color: "primary.main" }}
-      >
-        {isCreatingPin
-          ? "Create Your PIN"
-          : `Welcome Back ${userDetails?.fullName.split(" ")[0]} 👋`}
-      </Typography>
       <StyledPaper elevation={0}>
+        <Typography
+          variant="h5"
+          gutterBottom
+          fontFamily="'Poppins', sans-serif"
+          sx={{ fontWeight: "bold", color: "primary.main", textAlign: "center" }}
+        >
+          {isCreatingPin
+            ? "Create Your PIN"
+            : `Welcome Back, ${userDetails?.fullName.split(" ")[0]} 👋`}
+        </Typography>
         {!showForgotPin && (
           <Grid container direction="column" spacing={4}>
             <Grid item>
               <Typography variant="body1" align="center" gutterBottom>
-                {isCreatingPin && !showConfirmPin && !showForgotPin
-                  ? "Choose a 4-digit PIN"
-                  : !showConfirmPin &&
-                    !isCreatingPin &&
-                    !showForgotPin &&
-                    "Enter your 4-digit PIN"}
+                {isCreatingPin
+                  ? showConfirmPin
+                    ? "Confirm your PIN"
+                    : "Choose a 4-digit PIN"
+                  : "Enter your 4-digit PIN"}
               </Typography>
               <Box display="flex" justifyContent="center" mt={2}>
-                {pin.map((digit, index) => (
+                {(isCreatingPin && showConfirmPin ? confirmPin : pin).map((digit, index) => (
                   <PinInput
                     key={index}
-                    id={`pin-${index}`}
+                    id={`pin-${isCreatingPin && showConfirmPin ? "confirm-" : ""}${index}`}
                     type="password"
                     maxLength={1}
                     value={digit}
-                    onChange={(e) => handlePinChange(index, e.target.value)}
+                    onChange={(e) => handlePinChange(index, e.target.value, isCreatingPin && showConfirmPin)}
                   />
                 ))}
               </Box>
             </Grid>
             {isCreatingPin && showConfirmPin && (
-              <Fade in={showConfirmPin} timeout={500}>
-                <Grid item>
-                  <Typography variant="body1" align="center" gutterBottom fontFamily="'Poppins', sans-serif">
-                    Confirm your PIN
-                  </Typography>
-                  <Box display="flex" justifyContent="center" mt={2}>
-                    {confirmPin.map((digit, index) => (
-                      <PinInput
-                        key={index}
-                        id={`pin-confirm-${index}`}
-                        type="password"
-                        maxLength={1}
-                        value={digit}
-                        onChange={(e) =>
-                          handlePinChange(index, e.target.value, true)
-                        }
-                      />
-                    ))}
-                  </Box>
-                </Grid>
-              </Fade>
+              <Grid item>
+                <Typography variant="body1" align="center" gutterBottom>
+                  Confirm your PIN
+                </Typography>
+                <Box display="flex" justifyContent="center" mt={2}>
+                  {confirmPin.map((digit, index) => (
+                    <PinInput
+                      key={index}
+                      id={`pin-confirm-${index}`}
+                      type="password"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handlePinChange(index, e.target.value, true)}
+                    />
+                  ))}
+                </Box>
+              </Grid>
             )}
-            <Grid item>
+            <Grid item sx={{ display: "flex", justifyContent: "center" }}>
               <StyledButton
                 onClick={handleSubmit}
                 disabled={
-                  pin.some((digit) => digit === "") ||
-                  (isCreatingPin &&
-                    showConfirmPin &&
-                    confirmPin.some((digit) => digit === ""))
+                  (isCreatingPin && showConfirmPin
+                    ? [...pin, ...confirmPin]
+                    : pin
+                  ).some((digit) => digit === "")
                 }
               >
+                <LockOpenIcon sx={{ mr: 1 }} />
                 {isCreatingPin ? "Create PIN" : "Login"}
               </StyledButton>
             </Grid>
-            {!isCreatingPin && !showConfirmPin && !showForgotPin && (
-              <Grid item>
+            {!isCreatingPin && (
+              <Grid item sx={{ textAlign: "center" }}>
                 <Link
                   component="button"
                   variant="body2"
@@ -252,30 +274,37 @@ const Checkin: React.FC = () => {
             )}
           </Grid>
         )}
+        {showForgotPin && (
+          <Fade in={showForgotPin} timeout={500}>
+            <Box>
+              <Typography
+                variant="h6"
+                gutterBottom
+                fontFamily="'Poppins', sans-serif"
+                sx={{ textAlign: "center" }}
+              >
+                Reset Your PIN
+              </Typography>
+              <TextField
+                fullWidth
+                label="Email"
+                variant="outlined"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                <IconButton onClick={() => setShowForgotPin(false)}>
+                  <ArrowBackIcon />
+                </IconButton>
+                <StyledButton onClick={handleForgotPin}>
+                  Send Reset Link
+                </StyledButton>
+              </Box>
+            </Box>
+          </Fade>
+        )}
       </StyledPaper>
-      {showForgotPin && !isCreatingPin && (
-        <Fade in={showForgotPin} timeout={500}>
-          <StyledPaper elevation={0} sx={{ mt: 2 }}>
-            <Typography
-              variant="h6"
-              gutterBottom fontFamily="'Poppins', sans-serif"
-            >
-              Reset Your PIN
-            </Typography>
-            <TextField
-              fullWidth
-              label="Email"
-              variant="outlined"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-            <StyledButton onClick={handleForgotPin}>
-              Send Reset Link
-            </StyledButton>
-          </StyledPaper>
-        </Fade>
-      )}
     </Container>
   );
 };

@@ -54,3 +54,15 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: #176884;
 }
+
+
+
+.hidden-scrollbar {
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
+}
+
+.hidden-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

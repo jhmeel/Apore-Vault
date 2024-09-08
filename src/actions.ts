@@ -9,8 +9,11 @@ import {
   IExchangeProps,
   IHolding,
   ILiquidityProvider,
+  INotification,
   Ioffering,
   ITransaction,
+  ITxStatus,
+  ITxType,
   MatchingPair,
 } from "./types";
 import {
@@ -40,13 +43,19 @@ import { useAuth } from "./context/AuthContext.js";
 
 export const useUserActions = () => {
   const { state, dispatch } = useContext(UserContext);
-  const { userDetails } = useAuth();
+  const { userDetails, user } = useAuth();
 
   const toggleTheme = () => dispatch({ type: "TOGGLE_THEME" });
 
   const disableNotification = () => dispatch({ type: "DISABLE_NOTIFICATION" });
 
-  const notifyUser = (message: string) => {};
+  const notifyUser = (notification: INotification) => {
+    const bc = new BroadcastChannel("EVENTS");
+    bc.postMessage({
+      type: notification.type,
+      message: notification,
+    });
+  };
 
   const createHoldings = async (userId: string, holdings: IHolding[]) => {
     try {
@@ -120,26 +129,51 @@ export const useUserActions = () => {
     }
   };
 
-  const createTxRecord = async (userId: string, tx: ITransaction) => {
-    try {
-      const userDocRef = doc(db, "users", userId);
-      const userDoc = await getDoc(userDocRef);
+  const createTxRecord = async (tx: ITransaction) => {
+    const userDocRef = doc(db, "users", user?.uid);
+    const userDoc = await getDoc(userDocRef);
 
+    const data = userDoc.data();
+    const transactionHistory = data?.transactionHistory || [];
+
+    if (transactionHistory.length > 0) {
+      await updateDoc(userDocRef, {
+        transactionHistory: arrayUnion(tx),
+      });
+    } else {
+      await updateDoc(userDocRef, {
+        transactionHistory: [tx],
+      });
+    }
+  };
+
+  const updateTxStatus = async (txRef: string, status: ITxStatus) => {
+    const userDocRef = doc(db, "users", user?.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    if (userDoc.exists()) {
       const data = userDoc.data();
       const transactionHistory = data?.transactionHistory || [];
 
-      if (transactionHistory.length > 0) {
-        await updateDoc(userDocRef, {
-          transactionHistory: arrayUnion(tx),
-        });
-      } else {
-        await updateDoc(userDocRef, {
-          transactionHistory: [tx], // Initialize transactionHistory with the new transaction
-        });
-      }
+      const updatedTransactionHistory = transactionHistory.map(
+        (transaction: ITransaction) => {
+          if (transaction.reference === txRef) {
+            return {
+              ...transaction,
+              status,
+              updatedAt: new Date(),
+            };
+          }
+          return transaction;
+        }
+      );
 
-    } catch (error: any) {
-      toast.error(`Error creating transaction record: ${error.message}`);
+      await updateDoc(userDocRef, {
+        transactionHistory: updatedTransactionHistory,
+      });
+    } else {
+      toast.error("User document not found!");
+      throw new Error("User document not found!");
     }
   };
 
@@ -661,6 +695,7 @@ export const useUserActions = () => {
     notifyUser,
     getHoldings,
     createTxRecord,
+    updateTxStatus,
     createHoldings,
     createDID,
     publishArticle,

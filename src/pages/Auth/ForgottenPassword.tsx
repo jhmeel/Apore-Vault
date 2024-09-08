@@ -51,9 +51,9 @@ const ForgottenPassword: React.FC = () => {
       <StyledButton type="submit" variant="contained" color="primary" fullWidth>
         Reset Password
       </StyledButton>
-      <Typography style={{ marginTop: 20 }}>
+      <Typography style={{ marginTop: 20 }}variant="body2">
         Remember your password?{' '}
-        <Typography component="span" color="primary" style={{ cursor: 'pointer' }} onClick={() => navigate('/auth/login')}>
+        <Typography variant="body2" component="span" color="primary" style={{ cursor: 'pointer' }} onClick={() => navigate('/auth/login')}>
           Log in
         </Typography>
       </Typography>

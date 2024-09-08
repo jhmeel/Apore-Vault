@@ -33,8 +33,8 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import RefreshIcon from "@mui/icons-material/Update";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import {
   LineChart,
   Line,
@@ -46,6 +46,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
+import { IHolding, INotification } from "../types";
+import { useWallet } from "../context/UserContext";
 
 const StyledCard = styled(Card)(({ theme }) => ({
   backgroundColor: theme.palette.mode === "dark" ? "#1E1E1E" : "#FFFFFF",
@@ -66,31 +68,12 @@ const AssetItem = styled(ListItem)(({ theme }) => ({
   },
 }));
 
-const SearchBar = styled(TextField)(({ theme }) => ({
+const SearchBar = styled(TextField)(() => ({
   "& .MuiOutlinedInput-root": {
     borderRadius: 20,
     height: "50px",
   },
 }));
-
-const ProgressWrapper = styled(Box)({
-  position: "relative",
-  height: 4,
-  width: "100%",
-  backgroundColor: "rgba(0,0,0,0.1)",
-  borderRadius: 2,
-  overflow: "hidden",
-});
-
-const ProgressBar = styled(Box)<{ width: number; color: string }>(
-  ({ width, color }) => ({
-    position: "absolute",
-    height: "100%",
-    width: `${width}%`,
-    backgroundColor: color,
-    transition: "width 0.5s ease-out",
-  })
-);
 
 const StyledTabs = styled(Tabs)(({ theme }) => ({
   marginBottom: theme.spacing(1),
@@ -111,7 +94,7 @@ const WalletButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-const WalletDrawer = styled(Drawer)(({ theme }) => ({
+const WalletDrawer = styled(Drawer)(() => ({
   "& .MuiDrawer-paper": {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -156,12 +139,17 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [web3Modal, setWeb3Modal] = useState<Web3Modal | null>(null);
   const [address, setAddress] = useState<string>("");
-  const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>(null);
+  const [provider, setProvider] =
+    useState<ethers.providers.Web3Provider | null>(null);
   const [usdtBalance, setUsdtBalance] = useState<string>("0");
   const [ethBalance, setEthBalance] = useState<string>("0");
+  const {state} = useWallet()
   const { userDetails } = useAuth();
-  const [filteredCryptoAssets, setFilteredCryptoAssets] = useState<IHolding[]>([]);
+  const [filteredCryptoAssets, setFilteredCryptoAssets] = useState<IHolding[]>(
+    []
+  );
   const [filteredFiatAssets, setFilteredFiatAssets] = useState<IHolding[]>([]);
+  const [notifications, setNotifications] = useState<INotification[]>([]);
 
   useEffect(() => {
     const providerOptions = {
@@ -190,17 +178,56 @@ const Dashboard: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const bc = new BroadcastChannel("EVENTS");
+
+    const handleNotification = (event: MessageEvent) => {
+      if (event.data?.type && event.data?.message) {
+        setNotifications((prev) => {
+          const newNotifications = [...prev];
+          if (
+            !newNotifications.some((not) => not.id === event.data.message.id)
+          ) {
+            newNotifications.push(event.data.message);
+          }
+          return newNotifications;
+        });
+      }
+    };
+
+    bc.addEventListener("message", handleNotification);
+
+    return () => {
+      bc.removeEventListener("message", handleNotification);
+      bc.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!drawerOpen) {
+      setNotificationsCount(notifications.length);
+    }
+  }, [notifications, drawerOpen]);
+
+  useEffect(() => {
     if (userDetails?.holdings) {
-      const cryptoAssets = userDetails.holdings.filter(asset => asset.type === 'Crypto');
-      const fiatAssets = userDetails.holdings.filter(asset => asset.type === 'Fiat');
+      const cryptoAssets = userDetails.holdings?.filter(
+        (asset) => asset.type === "Crypto"
+      );
+      const fiatAssets = userDetails.holdings?.filter(
+        (asset) => asset.type === "Fiat"
+      );
 
-      setFilteredCryptoAssets(cryptoAssets.filter(asset =>
-        asset.name.toLowerCase().includes(searchQuery.toLowerCase())
-      ));
+      setFilteredCryptoAssets(
+        cryptoAssets.filter((asset) =>
+          asset.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
 
-      setFilteredFiatAssets(fiatAssets.filter(asset =>
-        asset.name.toLowerCase().includes(searchQuery.toLowerCase())
-      ));
+      setFilteredFiatAssets(
+        fiatAssets.filter((asset) =>
+          asset.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
     }
   }, [userDetails?.holdings, searchQuery]);
 
@@ -329,7 +356,9 @@ const Dashboard: React.FC = () => {
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h6" fontFamily="'Poppins', sans-serif">{userDetails?.fullName.split(' ')[0]} 👋</Typography>
+        <Typography variant="h6" fontFamily="'Poppins', sans-serif">
+          {userDetails?.fullName.split(" ")[0]} 👋
+        </Typography>
         <Box display="flex" alignItems="center">
           {!address ? (
             <WalletButton
@@ -351,9 +380,9 @@ const Dashboard: React.FC = () => {
             </WalletButton>
           )}
           <IconButton onClick={() => setDrawerOpen(true)}>
-            <Badge badgeContent={notificationsCount} color="error">
+           {state.notificationsEnabled?<Badge badgeContent={notificationsCount} color="error">
               <NotificationsIcon />
-            </Badge>
+            </Badge> :  <NotificationsOffIcon /> } 
           </IconButton>
         </Box>
       </Box>
@@ -426,7 +455,7 @@ const Dashboard: React.FC = () => {
             variant="contained"
             color="primary"
             startIcon={<SendIcon />}
-            onClick={() => navigate('/xender')}
+            onClick={() => navigate("/xender")}
           >
             Send
           </ActionButton>
@@ -434,7 +463,7 @@ const Dashboard: React.FC = () => {
             variant="contained"
             color="secondary"
             startIcon={<CallReceivedIcon />}
-            onClick={() => navigate('/receiver')}
+            onClick={() => navigate("/receiver")}
           >
             Receive
           </ActionButton>
@@ -442,7 +471,7 @@ const Dashboard: React.FC = () => {
             variant="contained"
             color="info"
             startIcon={<SwapHorizIcon />}
-            onClick={() => navigate('/converter')}
+            onClick={() => navigate("/converter")}
           >
             Convert
           </ActionButton>
@@ -452,7 +481,8 @@ const Dashboard: React.FC = () => {
       <Box display="flex" alignItems="center" mb={2}>
         <SearchBar
           fullWidth
-          variant="outlined"size="small"
+          variant="outlined"
+          size="small"
           placeholder="Search assets"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -486,13 +516,23 @@ const Dashboard: React.FC = () => {
             ? filteredCryptoAssets.map((asset) => (
                 <AssetItem key={asset.id}>
                   <ListItemAvatar>
-                    <Avatar sx={{ bgcolor: asset.color || theme.palette.primary.main }}>{asset.symbol?.[0]}</Avatar>
+                    <Avatar
+                      sx={{
+                        bgcolor: asset.color || theme.palette.primary.main,
+                      }}
+                    >
+                      {asset.symbol?.[0]}
+                    </Avatar>
                   </ListItemAvatar>
                   <ListItemText
                     primary={asset.name}
                     secondary={`${asset.amount} ${asset.symbol}`}
                   />
-                  <Box display="flex" flexDirection="column" alignItems="flex-end">
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="flex-end"
+                  >
                     <Typography variant="body2">
                       ${asset.value?.toFixed(2)}
                     </Typography>
@@ -502,24 +542,33 @@ const Dashboard: React.FC = () => {
             : filteredFiatAssets.map((asset) => (
                 <AssetItem key={asset.id}>
                   <ListItemAvatar>
-                    <Avatar sx={{ bgcolor: asset.color || theme.palette.secondary.main }}>{asset.symbol?.[0]}</Avatar>
+                    <Avatar
+                      sx={{
+                        bgcolor: asset.color || theme.palette.secondary.main,
+                      }}
+                    >
+                      {asset.symbol?.[0]}
+                    </Avatar>
                   </ListItemAvatar>
                   <ListItemText
                     primary={asset.name}
                     secondary={`${asset.symbol}`}
                   />
-                  <Box display="flex" flexDirection="column" alignItems="flex-end">
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="flex-end"
+                  >
                     <Typography variant="body2">
-                     ${asset.value?.toFixed(2)}
+                      ${asset.value?.toFixed(2)}
                     </Typography>
                   </Box>
                 </AssetItem>
-              ))
-          }
+              ))}
         </List>
       </StyledCard>
 
-      <SwipeableDrawer
+      {state.notificationsEnabled && <SwipeableDrawer
         anchor="top"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -530,21 +579,29 @@ const Dashboard: React.FC = () => {
           <Typography variant="h6" gutterBottom>
             Notifications
           </Typography>
-          <List>
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar>
-                  <TrendingUpIcon />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary="Bitcoin Price Surge"
-                secondary="Bitcoin has increased by 2.5% in the last 24 hours."
-              />
-            </ListItem>
+          <List style={{ maxHeight: "300px", overflowY: "auto" }}>
+            {notifications.length > 0 ? (
+              notifications.map((notification: INotification, i) => (
+                <ListItem key={i}>
+                  <ListItemAvatar>
+                    {notification?.icon && (
+                      <Avatar>{notification?.icon}</Avatar>
+                    )}
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={notification.title}
+                    secondary={notification.content}
+                  />
+                </ListItem>
+              ))
+            ) : (
+              <Typography variant="body1" align="center">
+                No notifications yet ☹
+              </Typography>
+            )}
           </List>
         </Box>
-      </SwipeableDrawer>
+      </SwipeableDrawer> }
 
       <WalletDrawer
         anchor="bottom"

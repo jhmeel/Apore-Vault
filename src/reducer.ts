@@ -1,39 +1,52 @@
-import { IUserState, IAction } from './types';
+import { IUserState, IAction } from "./types";
 
 export const userReducer = (state: IUserState, action: IAction): IUserState => {
+  let newState: IUserState;
+
   switch (action.type) {
-    case 'TOGGLE_THEME':
-      return {
+    case "TOGGLE_THEME":
+      newState = {
         ...state,
-        theme: state.theme === 'light' ? 'dark' : 'light',
+        theme: state.theme === "light" ? "dark" : "light",
       };
-    case 'DISABLE_NOTIFICATION':
-      return {
+      window.location.reload();
+      break;
+    case "DISABLE_NOTIFICATION":
+      newState = {
         ...state,
-        notificationsEnabled: false,
+        notificationsEnabled:
+          state.notificationsEnabled == false ? true : false,
       };
-    case 'CREATE_HOLDINGS':
-     case 'GET_HOLDINGS':
-      return {
+      break;
+    case "CREATE_HOLDINGS":
+    case "GET_HOLDINGS":
+      newState = {
         ...state,
         holdings: [...state.holdings, ...action.payload],
       };
-      case 'GET_PORTFOLIO_SUMMARY':
-      return {
+      break;
+    case "GET_PORTFOLIO_SUMMARY":
+      newState = {
         ...state,
         portfolioSummary: action.payload,
       };
-      case 'GET_TX_HISTORY':
-      return {
+      break;
+    case "GET_TX_HISTORY":
+      newState = {
         ...state,
         transactionHistory: [...state.transactionHistory, ...action.payload],
       };
-      case 'GET_ARTICLES':
-      return {
+      break;
+    case "GET_ARTICLES":
+      newState = {
         ...state,
         articles: [...state.articles, ...action.payload],
       };
+      break;
     default:
       return state;
   }
+
+  localStorage.setItem("user_state", JSON.stringify(newState));
+  return newState;
 };

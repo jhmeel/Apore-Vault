@@ -23,7 +23,6 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 const GlassmorphicBox = styled(animated(Box))(({ theme }) => ({
   background: "rgba(255, 255, 255, 0.05)",
@@ -57,7 +56,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
 }));
 
 const Section = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(15, 0),
+  padding: theme.spacing(10, 0),
 }));
 
 const features = [
@@ -364,7 +363,7 @@ const Landing = () => {
 
         <Section>
           <Typography
-            variant="h3"
+            variant="h2"
             component="h2"
             gutterBottom
             textAlign="center"
@@ -408,7 +407,7 @@ const Landing = () => {
 
         <Section>
           <Typography
-            variant="h3"
+            variant="h2"
             component="h2"
             gutterBottom
             textAlign="center"

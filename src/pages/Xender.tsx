@@ -83,12 +83,14 @@ const Xender: React.FC = () => {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [recipientAddress, setRecipientAddress] = useState("");
+  const [narration,setNarration]= useState("");
   const [sendAmount, setSendAmount] = useState("");
   const { getLiquidityProviders } = useUserActions();
   const [providers, setProviders] = useState<ILiquidityProvider[] | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerData, setDrawerData] = useState<{
     amount: string;
+    narration:string;
     recipientAddress: string;
     offering: Ioffering | null;
   } | null>(null);
@@ -152,15 +154,10 @@ const Xender: React.FC = () => {
         amount: sendAmount,
         recipientAddress,
         offering: selectedOffering,
+        narration,
       });
       setIsDrawerOpen(true);
-      console.log(
-        "Sending",
-        sendAmount,
-        selectedOffering.data.payin?.currencyCode,
-        "to",
-        recipientAddress
-      );
+    
     } catch (err: unknown) {
       if (err instanceof Error) {
         toast.error(err.message);
@@ -330,8 +327,16 @@ const Xender: React.FC = () => {
                 </InputAdornment>
               ),
             }}
+            sx={{ mb: 2 }}
           />
-
+            <TextField
+            label={'Narration'}
+            variant="outlined"
+            fullWidth
+            onChange={(e) => setNarration(e.target.value)}
+            value={narration}
+            
+          />
           <Box mt={2}>
             <Typography variant="body2" color="textSecondary">
               Fee:{" "}
@@ -376,6 +381,8 @@ const Xender: React.FC = () => {
         amount={drawerData?.amount || ""}
         recipientAddress={drawerData?.recipientAddress || ""}
         offering={drawerData?.offering || null}
+        narration={drawerData?.narration}
+        currencyCode={`${drawerData?.offering?.data.payin.currencyCode}/${drawerData?.offering?.data.payout.currencyCode}`}
         onClose={handleDrawerClose}
       />
     </PageContainer>

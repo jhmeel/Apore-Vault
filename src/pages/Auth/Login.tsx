@@ -95,14 +95,14 @@ const Login: React.FC = () => {
       </StyledButton>
       
       
-      <Typography style={{ marginTop: 20 }}>
+      <Typography style={{ marginTop: 20 }}variant="body2">
         Don't have an account?{' '}
-        <Typography component="span" color="primary" style={{ cursor: 'pointer' }} onClick={() => navigate('/auth/signup')}>
+        <Typography variant="body2" component="span" color="primary" style={{ cursor: 'pointer' }} onClick={() => navigate('/auth/signup')}>
           Sign up
         </Typography>
       </Typography>
-      <Typography style={{ marginTop: 10 }}>
-        <Typography component="span" color="primary" style={{ cursor: 'pointer' }} onClick={() => navigate('/auth/forgot-password')}>
+      <Typography style={{ marginTop: 10 }}variant="body2">
+        <Typography variant="body2" component="span" color="primary" style={{ cursor: 'pointer' }} onClick={() => navigate('/auth/forgot-password')}>
           Forgot password?
         </Typography>
       </Typography>

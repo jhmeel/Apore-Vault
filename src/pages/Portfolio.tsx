@@ -47,24 +47,31 @@ import { IHolding } from "../types";
 import Logout from "./Auth/Logout.js";
 import { useAuth } from "../context/AuthContext";
 import { useUserActions } from "../actions";
+import { useWallet } from "../context/UserContext";
+import toast from "react-hot-toast";
 
 const Portfolio: React.FC = () => {
   const [cryptoHoldings, setCryptoHoldings] = useState<IHolding[]>([]);
   const [fiatHoldings, setFiatHoldings] = useState<IHolding[]>([]);
-  const [filteredCryptoHoldings, setFilteredCryptoHoldings] = useState<IHolding[]>([]);
-  const [filteredFiatHoldings, setFilteredFiatHoldings] = useState<IHolding[]>([]);
+  const [filteredCryptoHoldings, setFilteredCryptoHoldings] = useState<
+    IHolding[]
+  >([]);
+  const [filteredFiatHoldings, setFilteredFiatHoldings] = useState<IHolding[]>(
+    []
+  );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [hideCryptoBalance, setHideCryptoBalance] = useState(false);
   const [hideFiatBalance, setHideFiatBalance] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [tabValue, setTabValue] = useState(0);
   const navigate = useNavigate();
   const { user, userDetails } = useAuth();
-  const { toggleTheme } = useUserActions();
+  const { toggleTheme, disableNotification } = useUserActions();
   const theme = useTheme();
+  const { state } = useWallet();
+  const [darkMode, setDarkMode] = useState(state.theme === "dark");
 
-  const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  const StyledTableCell = styled(TableCell)(() => ({
     fontWeight: "bold",
   }));
 
@@ -96,8 +103,12 @@ const Portfolio: React.FC = () => {
 
   useEffect(() => {
     if (userDetails?.holdings) {
-      const cryptoAssets = userDetails.holdings.filter(asset => asset.type === 'Crypto');
-      const fiatAssets = userDetails.holdings.filter(asset => asset.type === 'Fiat');
+      const cryptoAssets = userDetails.holdings.filter(
+        (asset) => asset.type === "Crypto"
+      );
+      const fiatAssets = userDetails.holdings.filter(
+        (asset) => asset.type === "Fiat"
+      );
 
       setCryptoHoldings(cryptoAssets);
       setFiatHoldings(fiatAssets);
@@ -123,16 +134,17 @@ const Portfolio: React.FC = () => {
     );
   }, [searchTerm, cryptoHoldings, fiatHoldings]);
 
-  const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
-    if (
-      event.type === "keydown" &&
-      ((event as React.KeyboardEvent).key === "Tab" ||
-        (event as React.KeyboardEvent).key === "Shift")
-    ) {
-      return;
-    }
-    setDrawerOpen(open);
-  };
+  const toggleDrawer =
+    (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
+      if (
+        event.type === "keydown" &&
+        ((event as React.KeyboardEvent).key === "Tab" ||
+          (event as React.KeyboardEvent).key === "Shift")
+      ) {
+        return;
+      }
+      setDrawerOpen(open);
+    };
 
   const formatBalance = (value: number | undefined, type: "C" | "F") => {
     if (value === undefined) return "N/A";
@@ -152,9 +164,9 @@ const Portfolio: React.FC = () => {
   const handleLogout = async () => {
     try {
       await Logout();
-      navigate('/auth/login');
+      navigate("/auth/login");
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     }
   };
 
@@ -170,7 +182,13 @@ const Portfolio: React.FC = () => {
         justifyContent="space-between"
         alignItems="center"
       >
-        <Typography variant="h2" gutterBottom fontFamily="'Poppins', sans-serif">Your Portfolio</Typography>
+        <Typography
+          variant="h2"
+          gutterBottom
+          fontFamily="'Poppins', sans-serif"
+        >
+          Your Portfolio
+        </Typography>
         <IconButton onClick={toggleDrawer(true)} size="large">
           <SettingsIcon />
         </IconButton>
@@ -184,12 +202,16 @@ const Portfolio: React.FC = () => {
                 Total Crypto Value
               </Typography>
               <Typography variant="body1">
-                {formatBalance(getTotalValue(cryptoHoldings), 'C')}
+                {formatBalance(getTotalValue(cryptoHoldings), "C")}
                 <IconButton
                   size="small"
                   onClick={() => setHideCryptoBalance(!hideCryptoBalance)}
                 >
-                  {hideCryptoBalance ? <VisibilityOffIcon fontSize="small"/> : <VisibilityIcon fontSize="small"/>}
+                  {hideCryptoBalance ? (
+                    <VisibilityOffIcon fontSize="small" />
+                  ) : (
+                    <VisibilityIcon fontSize="small" />
+                  )}
                 </IconButton>
               </Typography>
             </CardContent>
@@ -202,12 +224,16 @@ const Portfolio: React.FC = () => {
                 Total Fiat Value
               </Typography>
               <Typography variant="body1">
-                {formatBalance(getTotalValue(fiatHoldings), 'F')}
+                {formatBalance(getTotalValue(fiatHoldings), "F")}
                 <IconButton
                   size="small"
                   onClick={() => setHideFiatBalance(!hideFiatBalance)}
                 >
-                  {hideFiatBalance ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small"/>}
+                  {hideFiatBalance ? (
+                    <VisibilityOffIcon fontSize="small" />
+                  ) : (
+                    <VisibilityIcon fontSize="small" />
+                  )}
                 </IconButton>
               </Typography>
             </CardContent>
@@ -220,7 +246,7 @@ const Portfolio: React.FC = () => {
           variant="contained"
           color="primary"
           startIcon={<SendIcon />}
-          onClick={() => navigate('/xender')}
+          onClick={() => navigate("/xender")}
         >
           Send
         </ActionButton>
@@ -228,7 +254,7 @@ const Portfolio: React.FC = () => {
           variant="contained"
           color="secondary"
           startIcon={<CallReceivedIcon />}
-          onClick={() => navigate('/receiver')}
+          onClick={() => navigate("/receiver")}
         >
           Receive
         </ActionButton>
@@ -236,7 +262,7 @@ const Portfolio: React.FC = () => {
           variant="contained"
           color="info"
           startIcon={<SwapHorizIcon />}
-          onClick={() => navigate('/converter')}
+          onClick={() => navigate("/converter")}
         >
           Convert
         </ActionButton>
@@ -279,7 +305,12 @@ const Portfolio: React.FC = () => {
                 <HoverableTableRow key={holding.id}>
                   <TableCell component="th" scope="row">
                     <Box display="flex" alignItems="center">
-                      <Avatar sx={{ bgcolor: holding.color || theme.palette.primary.main, mr: 1 }}>
+                      <Avatar
+                        sx={{
+                          bgcolor: holding.color || theme.palette.primary.main,
+                          mr: 1,
+                        }}
+                      >
                         {holding.symbol?.[0]}
                       </Avatar>
                       <Box>
@@ -292,7 +323,7 @@ const Portfolio: React.FC = () => {
                   </TableCell>
                   <TableCell align="right">{holding.amount}</TableCell>
                   <TableCell align="right">
-                    {formatBalance(holding.value, 'C')}
+                    {formatBalance(holding.value, "C")}
                   </TableCell>
                 </HoverableTableRow>
               ))}
@@ -316,7 +347,13 @@ const Portfolio: React.FC = () => {
                 <HoverableTableRow key={holding.id}>
                   <TableCell component="th" scope="row">
                     <Box display="flex" alignItems="center">
-                      <Avatar sx={{ bgcolor: holding.color || theme.palette.secondary.main, mr: 1 }}>
+                      <Avatar
+                        sx={{
+                          bgcolor:
+                            holding.color || theme.palette.secondary.main,
+                          mr: 1,
+                        }}
+                      >
                         {holding.symbol?.[0]}
                       </Avatar>
                       <Box>
@@ -329,7 +366,7 @@ const Portfolio: React.FC = () => {
                   </TableCell>
                   <TableCell align="right">{holding.amount}</TableCell>
                   <TableCell align="right">
-                    {formatBalance(holding.value, 'F')}
+                    {formatBalance(holding.value, "F")}
                   </TableCell>
                 </HoverableTableRow>
               ))}
@@ -341,8 +378,12 @@ const Portfolio: React.FC = () => {
       <Drawer anchor="right" open={drawerOpen} onClose={toggleDrawer(false)}>
         <Box sx={{ width: 250 }} role="presentation">
           <Box sx={{ p: 2, display: "flex", alignItems: "center" }}>
-            <Avatar sx={{ mr: 2 }}>{user?.displayName?.charAt(0) || userDetails?.fullName.charAt(0)}</Avatar>
-            <Typography variant="subtitle1">{user?.displayName || userDetails?.fullName}</Typography>
+            <Avatar sx={{ mr: 2 }}>
+              {user?.displayName?.charAt(0) || userDetails?.fullName.charAt(0)}
+            </Avatar>
+            <Typography variant="subtitle1">
+              {user?.displayName || userDetails?.fullName}
+            </Typography>
           </Box>
           <List>
             <HoverableListItem>
@@ -350,7 +391,13 @@ const Portfolio: React.FC = () => {
                 <NotificationsOffIcon />
               </ListItemIcon>
               <ListItemText primary="Disable Notifications" />
-              <Switch edge="end" />
+              <Switch
+                edge="end"
+                onChange={() => {
+                  disableNotification();
+                }}
+                checked={!state.notificationsEnabled}
+              />
             </HoverableListItem>
             <HoverableListItem>
               <ListItemIcon>
@@ -359,7 +406,10 @@ const Portfolio: React.FC = () => {
               <ListItemText primary="Dark Mode" />
               <Switch
                 edge="end"
-                onChange={() => {toggleTheme(); setDarkMode(!darkMode)}}
+                onChange={() => {
+                  toggleTheme();
+                  setDarkMode(!darkMode);
+                }}
                 checked={darkMode}
               />
             </HoverableListItem>
@@ -367,7 +417,16 @@ const Portfolio: React.FC = () => {
               <ListItemIcon>
                 <SecurityIcon />
               </ListItemIcon>
-              <ListItemText primary="Configure 2FA" />
+              <ListItemText
+                primary="Configure 2FA"
+                onClick={() => {
+                  if (userDetails?.enabled2F) {
+                    toast.success("2FA already configured");
+                    return;
+                  }
+                  navigate("/auth/checkin");
+                }}
+              />
             </HoverableListItem>
             <HoverableListItem>
               <ListItemIcon>
