@@ -175,6 +175,7 @@ const Xender: React.FC = () => {
     handleModalClose();
   };
 
+  
   const filteredOfferings = useMemo(() => {
     return (
       providers?.flatMap((provider) =>
@@ -186,6 +187,7 @@ const Xender: React.FC = () => {
       ) || []
     );
   }, [providers, searchTerm]);
+
 
   return (
     <PageContainer maxWidth="md" style={{ paddingBottom: "65px" }}>

@@ -226,40 +226,52 @@ const Txhistory: React.FC = () => {
     if (isMobile) {
       return (
         <Grid container spacing={2}>
-          {filteredTransactions.map((tx) => (
-            <Grid item xs={12} key={tx.reference}>
-              <Fade in={true} timeout={500}>
-                <Card>
-                  <CardActionArea onClick={() => handleTxClick(tx)}>
-                    <CardContent>
-                      <Typography variant="h6" gutterBottom>
-                        {tx.type}
-                      </Typography>
-                      <Typography variant="body1" color="primary" gutterBottom>
-                        {tx.amount} {tx.currencyCode}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {tx.timestamp?.toDate().toLocaleString()}
-                      </Typography>
-                      <Box
-                        display="flex"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        mt={1}
-                      >
-                        <Typography variant="body2">{tx.narration}</Typography>
-                        <StatusChip
-                          label={tx.status}
-                          status={tx.status}
-                          size="small"
-                        />
-                      </Box>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Fade>
-            </Grid>
-          ))}
+          {filteredTransactions
+            .sort(
+              (a, b) =>
+                b.timestamp?.toDate().getTime() -
+                a.timestamp?.toDate().getTime()
+            )
+            .map((tx) => (
+              <Grid item xs={12} key={tx.reference}>
+                <Fade in={true} timeout={500}>
+                  <Card>
+                    <CardActionArea onClick={() => handleTxClick(tx)}>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom>
+                          {tx.type}
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          color="primary"
+                          gutterBottom
+                        >
+                          {tx.amount} {tx.currencyCode}
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          {tx.timestamp?.toDate().toLocaleString()}
+                        </Typography>
+                        <Box
+                          display="flex"
+                          justifyContent="space-between"
+                          alignItems="center"
+                          mt={1}
+                        >
+                          <Typography variant="body2">
+                            {tx.narration}
+                          </Typography>
+                          <StatusChip
+                            label={tx.status}
+                            status={tx.status}
+                            size="small"
+                          />
+                        </Box>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Fade>
+              </Grid>
+            ))}
         </Grid>
       );
     }
@@ -278,25 +290,33 @@ const Txhistory: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredTransactions.map((tx) => (
-              <StyledTableRow
-                key={tx.reference}
-                onClick={() => handleTxClick(tx)}
-              >
-                <TableCell>{tx.type}</TableCell>
-                <TableCell>{tx.amount}</TableCell>
-                <TableCell>{tx.currencyCode}</TableCell>
-                <TableCell>{tx.timestamp?.toDate().toLocaleString()}</TableCell>
-                <TableCell>{tx.narration}</TableCell>
-                <TableCell>
-                  <StatusChip
-                    label={tx.status}
-                    status={tx.status}
-                    size="small"
-                  />
-                </TableCell>
-              </StyledTableRow>
-            ))}
+            {filteredTransactions
+              .sort(
+                (a, b) =>
+                  b.timestamp?.toDate().getTime() -
+                  a.timestamp?.toDate().getTime()
+              )
+              .map((tx) => (
+                <StyledTableRow
+                  key={tx.reference}
+                  onClick={() => handleTxClick(tx)}
+                >
+                  <TableCell>{tx.type}</TableCell>
+                  <TableCell>{tx.amount}</TableCell>
+                  <TableCell>{tx.currencyCode}</TableCell>
+                  <TableCell>
+                    {tx.timestamp?.toDate().toLocaleString()}
+                  </TableCell>
+                  <TableCell>{tx.narration}</TableCell>
+                  <TableCell>
+                    <StatusChip
+                      label={tx.status}
+                      status={tx.status}
+                      size="small"
+                    />
+                  </TableCell>
+                </StyledTableRow>
+              ))}
           </TableBody>
         </Table>
       </TableContainer>
@@ -358,7 +378,7 @@ const Txhistory: React.FC = () => {
                 <CloseIcon />
               </IconButton>
             </Box>
-            <Logo src={logoImg}  alt="Logo" />
+            <Logo src={logoImg} alt="Logo" />
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <DetailItem>
@@ -370,7 +390,7 @@ const Txhistory: React.FC = () => {
                 <DetailItem>
                   <DetailLabel variant="subtitle2">Amount</DetailLabel>
                   <DetailValue variant="body1">
-                    {selectedTx.amount} {selectedTx.currencyCode?.split('/')[0]}
+                    {selectedTx.amount} {selectedTx.currencyCode?.split("/")[0]}
                   </DetailValue>
                 </DetailItem>
               </Grid>
@@ -394,7 +414,11 @@ const Txhistory: React.FC = () => {
               <Grid item xs={12}>
                 <DetailItem>
                   <DetailLabel variant="subtitle2">From</DetailLabel>
-                  <DetailValue variant="body1" className="hidden-scrollbar" style={{overflowX:'auto'}}>
+                  <DetailValue
+                    variant="body1"
+                    className="hidden-scrollbar"
+                    style={{ overflowX: "auto" }}
+                  >
                     {selectedTx.type == "CONVERT"
                       ? selectedTx.from
                       : user?.displayName}
@@ -404,7 +428,11 @@ const Txhistory: React.FC = () => {
               <Grid item xs={12}>
                 <DetailItem>
                   <DetailLabel variant="subtitle2">To</DetailLabel>
-                  <DetailValue variant="body1" className="hidden-scrollbar" style={{overflowX:'auto'}}>
+                  <DetailValue
+                    variant="body1"
+                    className="hidden-scrollbar"
+                    style={{ overflowX: "auto" }}
+                  >
                     {selectedTx.to || "N/A"}
                   </DetailValue>
                 </DetailItem>
@@ -412,13 +440,22 @@ const Txhistory: React.FC = () => {
               <Grid item xs={12}>
                 <DetailItem>
                   <DetailLabel variant="subtitle2">Narration</DetailLabel>
-                  <DetailValue variant="body1" className="hidden-scrollbar" style={{overflowX:'auto'}}>
+                  <DetailValue
+                    variant="body1"
+                    className="hidden-scrollbar"
+                    style={{ overflowX: "auto" }}
+                  >
                     {selectedTx.narration}
                   </DetailValue>
                 </DetailItem>
               </Grid>
               <Grid item xs={12}>
-                <Box textAlign="center" mb={2} className="hidden-scrollbar" style={{overflowX:'auto'}}>
+                <Box
+                  textAlign="center"
+                  mb={2}
+                  className="hidden-scrollbar"
+                  style={{ overflowX: "auto" }}
+                >
                   <svg ref={barcodeRef}></svg>
                 </Box>
               </Grid>
