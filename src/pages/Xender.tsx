@@ -26,7 +26,10 @@ import StarIcon from "@mui/icons-material/Star";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import { Ioffering, ILiquidityProvider } from "../types";
 import { useUserActions } from "../actions";
-import { formatSettlementTime, getExchangeAmount } from "../utils";
+import {
+  formatSettlementTime,
+  getExchangeAmount,
+} from "../utils";
 import toast from "react-hot-toast";
 import ConfirmationDrawer from "../components/ConfirmationDrawer";
 
@@ -83,14 +86,14 @@ const Xender: React.FC = () => {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [recipientAddress, setRecipientAddress] = useState("");
-  const [narration,setNarration]= useState("");
+  const [narration, setNarration] = useState("");
   const [sendAmount, setSendAmount] = useState("");
   const { getLiquidityProviders } = useUserActions();
   const [providers, setProviders] = useState<ILiquidityProvider[] | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerData, setDrawerData] = useState<{
     amount: string;
-    narration:string;
+    narration: string;
     recipientAddress: string;
     offering: Ioffering | null;
   } | null>(null);
@@ -104,18 +107,13 @@ const Xender: React.FC = () => {
 
   useEffect(() => {
     const fetchProviders = async () => {
-      try {
-        const result = await getLiquidityProviders();
-        setProviders(result);
-      } catch (error) {
-        console.error("Error fetching liquidity providers:", error);
-        toast.error("Failed to fetch liquidity providers");
-      }
+      const result = await getLiquidityProviders();
+
+      setProviders(result);
     };
 
     fetchProviders();
   }, [getLiquidityProviders]);
-
   useEffect(() => {
     if (location.state && location.state.offering) {
       setSelectedOffering(location.state.offering);
@@ -141,6 +139,9 @@ const Xender: React.FC = () => {
   const handleDrawerClose = () => {
     setIsDrawerOpen(false);
     setDrawerData(null);
+    setNarration("");
+    setRecipientAddress("");
+    setSendAmount("");
   };
 
   const handleSendConfirm = () => {
@@ -157,7 +158,6 @@ const Xender: React.FC = () => {
         narration,
       });
       setIsDrawerOpen(true);
-    
     } catch (err: unknown) {
       if (err instanceof Error) {
         toast.error(err.message);
@@ -170,13 +170,15 @@ const Xender: React.FC = () => {
   };
 
   const filteredOfferings = useMemo(() => {
-    return providers?.flatMap((provider) =>
-      provider.offerings?.filter((offering: Ioffering) =>
-        offering.data.payin?.currencyCode
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-      )
-    ) || [];
+    return (
+      providers?.flatMap((provider) =>
+        provider.offerings?.filter((offering: Ioffering) =>
+          offering.data.payin?.currencyCode
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
+        )
+      ) || []
+    );
   }, [providers, searchTerm]);
 
   return (
@@ -329,25 +331,14 @@ const Xender: React.FC = () => {
             }}
             sx={{ mb: 2 }}
           />
-            <TextField
-            label={'Narration'}
+          <TextField
+            label={"Narration"}
             variant="outlined"
             fullWidth
             onChange={(e) => setNarration(e.target.value)}
             value={narration}
-            
           />
           <Box mt={2}>
-            <Typography variant="body2" color="textSecondary">
-              Fee:{" "}
-              {selectedOffering?.data.payoutUnitsPerPayinUnit
-                ? (
-                    (1 - Number(selectedOffering.data.payoutUnitsPerPayinUnit)) *
-                    100
-                  ).toFixed(2)
-                : 0}
-              %
-            </Typography>
             <Typography variant="body2" color="textSecondary">
               Settlement Time:{" "}
               {formatSettlementTime(

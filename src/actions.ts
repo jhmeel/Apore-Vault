@@ -2,7 +2,7 @@
 import axios from "axios";
 import { useContext } from "react";
 import { UserContext } from "./context/UserContext";
-import liquidityProviders from "./liquidityProvider.js";
+import liquidityProviders from "./liquidityProvider";
 import {
   IBlogPost,
   ICustomerCredentialProps,
@@ -13,7 +13,6 @@ import {
   Ioffering,
   ITransaction,
   ITxStatus,
-  ITxType,
   MatchingPair,
 } from "./types";
 import {
@@ -39,7 +38,8 @@ import {
 } from "@tbdex/http-client";
 import localforage from "localforage";
 import { Jwt, PresentationExchange } from "@web5/credentials";
-import { useAuth } from "./context/AuthContext.js";
+import { useAuth } from "./context/AuthContext";
+import { getLiquidityProviderRating} from "./utils";
 
 export const useUserActions = () => {
   const { state, dispatch } = useContext(UserContext);
@@ -257,6 +257,10 @@ export const useUserActions = () => {
     }
   };
 
+  const getPFIByDID = async (did: string) => {
+    return liquidityProviders.find((prov) => prov.did === did);
+  };
+
   const getCredentials = async (credentials: ICustomerCredentialProps) => {
     try {
       const { data } = await axios.get(
@@ -314,8 +318,9 @@ export const useUserActions = () => {
       } else {
         // If not found in cache, refetch
         const offerings = await TbdexHttpClient.getOfferings({ pfiDid: did });
+  
         await localforage.setItem(did, JSON.stringify(offerings)); // Cache the new offerings
-        return offerings as Ioffering[];
+        return offerings as unknown as Ioffering[];
       }
     } catch (err: any) {
       toast.error(`Error retrieving offerings: ${err.message}`);
@@ -519,12 +524,11 @@ export const useUserActions = () => {
     try {
       const providers = await Promise.all(
         liquidityProviders.map(async (provider) => {
-          const offerings = await getOfferingsByDID(provider.did);
           return {
             did: provider.did,
             name: provider.name,
-            rating: 3.4,
-            offerings: offerings,
+            rating: await getLiquidityProviderRating(provider.did),
+            offerings: await getOfferingsByDID(provider.did),
           } as ILiquidityProvider;
         })
       );
@@ -642,36 +646,34 @@ export const useUserActions = () => {
         exchangeProps.selectedOffering.data.requiredClaims,
     });
 
-    try {
-      const rfq = Rfq.create({
-        metadata: {
-          to: exchangeProps.selectedOffering.metadata.from,
-          from: userDetails?.did,
-          protocol: "1.0",
+    const rfq = Rfq.create({
+      metadata: {
+        to: exchangeProps.selectedOffering.metadata.from,
+        from: userDetails?.did,
+        protocol: "1.0",
+      },
+      data: {
+        offeringId: exchangeProps.selectedOffering.metadata.id,
+        payin: {
+          kind: exchangeProps.selectedOffering.data.payin.kind,
+          amount: exchangeProps.txPayload.amount,
+          paymentDetails: {},
         },
-        data: {
-          offeringId: exchangeProps.selectedOffering.metadata.id,
-          payin: {
-            kind: exchangeProps.selectedOffering.data.payin.kind,
-            amount: exchangeProps.txPayload.amount,
-            paymentDetails: {},
-          },
-          payout: {
-            kind: exchangeProps.selectedOffering.data.payout.kind,
-            paymentDetails: {},
-          },
-          claims: selectedCredentials,
+        payout: {
+          kind: exchangeProps.selectedOffering.data.payout.kind,
+          paymentDetails: {},
         },
-      });
+        claims: selectedCredentials,
+      },
+    });
 
-      await rfq.verifyOfferingRequirements(
-        exchangeProps.selectedOffering as unknown as Offering
-      );
+    await rfq.verifyOfferingRequirements(
+      exchangeProps.selectedOffering as unknown as Offering
+    );
 
-      await rfq.sign(userDetails?.did);
+    await rfq.sign(userDetails?.did);
 
-      await TbdexHttpClient.createExchange(rfq);
-    } catch (err: any) {}
+    await TbdexHttpClient.createExchange(rfq);
   };
   return {
     state,
@@ -690,6 +692,7 @@ export const useUserActions = () => {
     removeAllOfferings,
     unCacheOfferings,
     getDID,
+    getPFIByDID,
     disableNotification,
     getCredentials,
     notifyUser,

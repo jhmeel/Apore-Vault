@@ -59,6 +59,9 @@ const ExchangeTransactionModal: React.FC<ExchangeTransactionModalProps> = ({
 
   const handleDrawerClose = () => {
     setIsDrawerOpen(false);
+    setPayinAmount('')
+    setPayoutAmount('')
+  
   };
 
   const onConfirm = () => {
@@ -151,11 +154,7 @@ const ExchangeTransactionModal: React.FC<ExchangeTransactionModalProps> = ({
                     )}
                   </Typography>
                 </Grid>
-                <Grid item>
-                  <Typography variant="body2" color="textSecondary">
-                    Fee: {Number(offering?.data.payoutUnitsPerPayinUnit) * 100}%
-                  </Typography>
-                </Grid>
+                
               </Grid>
             </Grid>
           </Grid>
@@ -168,6 +167,7 @@ const ExchangeTransactionModal: React.FC<ExchangeTransactionModalProps> = ({
               color="primary"
               onClick={onConfirm}
               sx={{ ml: 2 }}
+              disabled={!payinAmount}
             >
               Confirm
             </Button>

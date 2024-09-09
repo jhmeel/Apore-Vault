@@ -23,15 +23,12 @@ import ForgottenPassword from "./pages/Auth/ForgottenPassword";
 import Checkin from "./pages/Auth/Checkin";
 import AutoLogout from "./pages/Auth/AutoLogout";
 import { UserProvider, useWallet } from "./context/UserContext";
-import { useUserActions } from "./actions";
-import { NoificationType } from "./types";
 
 function App() {
   const { pathname } = useLocation();
   const { toasts } = useToasterStore();
   const { state } = useWallet();
   const [mode, setMode] = useState<"light" | "dark">(state.theme);
-  const { notifyUser } = useUserActions();
 
   const theme = useMemo(() => getTheme(mode), [mode]);
 

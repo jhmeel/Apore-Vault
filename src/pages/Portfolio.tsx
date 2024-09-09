@@ -420,7 +420,9 @@ const Portfolio: React.FC = () => {
               <ListItemText
                 primary="Configure 2FA"
                 onClick={() => {
-                  if (userDetails?.enabled2F) {
+                  if (!navigator.onLine) {
+                    return;
+                  } else if (userDetails?.enabled2F) {
                     toast.success("2FA already configured");
                     return;
                   }

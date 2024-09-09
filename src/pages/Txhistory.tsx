@@ -94,7 +94,7 @@ const DownloadButton = styled(Button)(({ theme }) => ({
 }));
 
 const Logo = styled("img")({
-  width: "100px",
+  width: "80px",
   height: "auto",
   marginBottom: "20px",
 });
@@ -358,7 +358,7 @@ const Txhistory: React.FC = () => {
                 <CloseIcon />
               </IconButton>
             </Box>
-            <Logo src={logoImg} alt="Logo" />
+            <Logo src={logoImg}  alt="Logo" />
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <DetailItem>
@@ -370,7 +370,7 @@ const Txhistory: React.FC = () => {
                 <DetailItem>
                   <DetailLabel variant="subtitle2">Amount</DetailLabel>
                   <DetailValue variant="body1">
-                    {selectedTx.amount} {selectedTx.currencyCode}
+                    {selectedTx.amount} {selectedTx.currencyCode?.split('/')[0]}
                   </DetailValue>
                 </DetailItem>
               </Grid>

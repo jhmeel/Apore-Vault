@@ -111,11 +111,7 @@ const MainTxModal: React.FC<MainTxModalProps> = ({
                   Settlement Time: {formatSettlementTime(offering.data.payout.methods[0].estimatedSettlementTime)}
                 </Typography>
               </Grid>
-              <Grid item>
-                <Typography variant="body2" color="textSecondary">
-                  Fee: {Number(offering.data.payoutUnitsPerPayinUnit)* 100}%
-                </Typography>
-              </Grid>
+             
             </Grid>
           </Grid>
         </Grid>
