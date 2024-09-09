@@ -3,7 +3,7 @@ import CryptoJS from "crypto-js";
 import { IHolding, Ioffering } from "./types";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./firebase";
-import BigNumber from 'bignumber.js'
+import BigNumber from "bignumber.js";
 
 export const formatAmount = (amount: number) => {
   if (Math.abs(amount) >= 1) {
@@ -88,15 +88,19 @@ export const holdings: IHolding[] = [
   },
 ];
 
-export const formatSettlementTime = (time?: number) => {
-  if (!time) return 0;
+export const formatSettlementTime = (timeInSeconds?: number) => {
+  if (!timeInSeconds) {
+    return 0;
+  }
+  // Convert seconds to minutes
+  const timeInMinutes = Math.floor(timeInSeconds / 60);
 
-  if (time < 60) {
-    return `${time} minutes`;
+  if (timeInMinutes < 60) {
+    return `${timeInMinutes} minute(s)`;
   } else {
-    const hours = Math.floor(time / 60);
-    const minutes = time % 60;
-    return `${hours} hours, ${minutes} minutes`;
+    const hours = Math.floor(timeInMinutes / 60);
+    const minutes = timeInMinutes % 60;
+    return `${hours} hour(s), ${minutes} minute(s)`;
   }
 };
 
@@ -129,69 +133,68 @@ export const getLiquidityProviderRating = async (
 };
 
 interface TransactionFeeParams {
-  transactionAmount: string;  // The transaction amount 
-  payin: string;              // The currency in which payment is made
-  payout: string;             // The currency in which the recipient receives payment
-  exchangeRate: string;       // Exchange rate between payin and payout currencies
+  transactionAmount: string; // The transaction amount
+  payin: string; // The currency in which payment is made
+  payout: string; // The currency in which the recipient receives payment
+  exchangeRate: string; // Exchange rate between payin and payout currencies
 }
 
 interface FeeStructure {
-  fixedFee: number;           // Flat fee added to every transaction
-  percentageFee: number;      // Percentage of the transaction amount added as a fee
+  fixedFee: number; // Flat fee added to every transaction
+  percentageFee: number; // Percentage of the transaction amount added as a fee
   exchangeRateMargin: number; // Margin applied to the exchange rate (e.g., 1% fee on conversion)
 }
 
 class TransactionFeeCalculator {
   private feeStructure: FeeStructure;
 
-
   constructor(feeStructure: FeeStructure) {
     this.feeStructure = feeStructure;
   }
 
-  
   private validateParams(params: TransactionFeeParams) {
     const { transactionAmount, exchangeRate } = params;
 
-    
     const amount = new BigNumber(transactionAmount);
     if (amount.isNaN() || amount.lte(0)) {
-      throw new Error('Invalid transaction amount: Must be a positive number');
+      throw new Error("Invalid transaction amount: Must be a positive number");
     }
 
     if (Number(exchangeRate) <= 0) {
-      throw new Error('Invalid exchange rate: Must be greater than zero');
+      throw new Error("Invalid exchange rate: Must be greater than zero");
     }
 
     return amount;
   }
 
-  
   public calculateTransactionFee(params: TransactionFeeParams): BigNumber {
     const { payin, payout, exchangeRate } = params;
     const amount = this.validateParams(params);
 
+    const percentageFeeAmount = amount.multipliedBy(
+      this.feeStructure.percentageFee
+    );
 
-    const percentageFeeAmount = amount.multipliedBy(this.feeStructure.percentageFee);
+    const totalBaseAmount = amount
+      .plus(this.feeStructure.fixedFee)
+      .plus(percentageFeeAmount);
 
-   
-    const totalBaseAmount = amount.plus(this.feeStructure.fixedFee).plus(percentageFeeAmount);
-
-  
     let totalAmount = totalBaseAmount;
     if (payin !== payout) {
-      const adjustedExchangeRate = Number(exchangeRate) * (1 - this.feeStructure.exchangeRateMargin); // Apply the margin
+      const adjustedExchangeRate =
+        Number(exchangeRate) * (1 - this.feeStructure.exchangeRateMargin); // Apply the margin
       totalAmount = totalBaseAmount.multipliedBy(adjustedExchangeRate);
     }
 
-    return totalAmount; 
+    return totalAmount;
   }
 }
 
-
 const feeStructure: FeeStructure = {
-  fixedFee: 0.5,              // fixed fee (0.50) of payin
-  percentageFee: 0.01,        //  percentage fee (e.g., 1%)
-  exchangeRateMargin: 0.005,  // exchange rate margin (e.g., 0.5%)
+  fixedFee: 0.5, // fixed fee (0.50) of payin
+  percentageFee: 0.01, //  percentage fee (e.g., 1%)
+  exchangeRateMargin: 0.005, // exchange rate margin (e.g., 0.5%)
 };
-export const transactionFeeCalculator = new TransactionFeeCalculator(feeStructure);
+export const transactionFeeCalculator = new TransactionFeeCalculator(
+  feeStructure
+);

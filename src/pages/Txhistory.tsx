@@ -107,7 +107,7 @@ const Txhistory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTx, setSelectedTx] = useState<ITransaction | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const barcodeRef = useRef<SVGSVGElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();

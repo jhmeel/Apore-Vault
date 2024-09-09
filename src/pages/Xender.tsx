@@ -19,6 +19,7 @@ import {
   useMediaQuery,
   useTheme,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import SendIcon from "@mui/icons-material/Send";
@@ -26,10 +27,7 @@ import StarIcon from "@mui/icons-material/Star";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import { Ioffering, ILiquidityProvider } from "../types";
 import { useUserActions } from "../actions";
-import {
-  formatSettlementTime,
-  getExchangeAmount,
-} from "../utils";
+import { formatSettlementTime, getExchangeAmount } from "../utils";
 import toast from "react-hot-toast";
 import ConfirmationDrawer from "../components/ConfirmationDrawer";
 
@@ -91,6 +89,7 @@ const Xender: React.FC = () => {
   const { getLiquidityProviders } = useUserActions();
   const [providers, setProviders] = useState<ILiquidityProvider[] | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [drawerData, setDrawerData] = useState<{
     amount: string;
     narration: string;
@@ -107,13 +106,20 @@ const Xender: React.FC = () => {
 
   useEffect(() => {
     const fetchProviders = async () => {
-      const result = await getLiquidityProviders();
-
-      setProviders(result);
+      setLoading(true);
+      try {
+        const result = await getLiquidityProviders();
+        setLoading(false);
+        setProviders(result);
+      } catch (error: any) {
+        setLoading(false);
+        toast.error("Error fetching providers:", error.message);
+      }
     };
 
     fetchProviders();
-  }, [getLiquidityProviders]);
+  }, []);
+
   useEffect(() => {
     if (location.state && location.state.offering) {
       setSelectedOffering(location.state.offering);
@@ -200,84 +206,106 @@ const Xender: React.FC = () => {
           ),
         }}
       />
-      <Paper elevation={3} sx={{ borderRadius: 2, overflow: "hidden" }}>
-        <List disablePadding>
-          {filteredOfferings.map((offering: Ioffering, index) => (
-            <OfferingListItem
-              key={offering.metadata.id}
-              button
-              onClick={() => handleOfferingClick(offering)}
-              sx={{
-                backgroundColor:
-                  index % 2 === 0
-                    ? theme.palette.background.default
-                    : theme.palette.background.paper,
-              }}
-            >
-              <ListItemText
-                primary={
-                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                    {offering.data.payin?.currencyCode} <ArrowRightAltIcon />{" "}
-                    {offering.data.payout?.currencyCode}
-                  </Typography>
-                }
-                secondary={
-                  <Box>
-                    <Typography variant="body2" color="textSecondary">
-                      {offering.data.description
-                        ?.replace(/Exchange/g, "Send")
-                        .replace(/for/g, "to")}
+
+      {loading ? (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            width: "100%",
+            marginTop: "50px",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      ) : (
+        <Paper elevation={3} sx={{ borderRadius: 2, overflow: "hidden" }}>
+          <List disablePadding>
+            {filteredOfferings.map((offering: Ioffering, index) => (
+              <OfferingListItem
+                key={offering.metadata.id}
+                button
+                onClick={() => handleOfferingClick(offering)}
+                sx={{
+                  backgroundColor:
+                    index % 2 === 0
+                      ? theme.palette.background.default
+                      : theme.palette.background.paper,
+                }}
+              >
+                <ListItemText
+                  primary={
+                    <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                      {offering.data.payin?.currencyCode} <ArrowRightAltIcon />{" "}
+                      {offering.data.payout?.currencyCode}
                     </Typography>
-                    <Box display="flex" alignItems="center" mt={0.5}>
-                      <Chip
-                        icon={
-                          <StarIcon
-                            sx={{ color: theme.palette.warning.main }}
-                          />
-                        }
-                        label={providers
-                          ?.find((p: ILiquidityProvider) =>
-                            p.offerings?.some(
-                              (off: Ioffering) =>
-                                off.signature === offering.signature
-                            )
-                          )
-                          ?.rating?.toFixed(1)}
-                        size="small"
-                        sx={{
-                          mr: 1,
-                          backgroundColor: theme.palette.warning.light,
-                        }}
-                      />
+                  }
+                  secondary={
+                    <Box>
                       <Typography variant="body2" color="textSecondary">
-                        {
-                          providers?.find((p: ILiquidityProvider) =>
-                            p.offerings?.some(
-                              (off: Ioffering) =>
-                                off.signature === offering.signature
-                            )
-                          )?.name
-                        }
+                        {offering.data.description
+                          ?.replace(/Exchange/g, "Send")
+                          .replace(/for/g, "to")}
                       </Typography>
+                      <Box display="flex" alignItems="center" mt={0.5}>
+                        <Chip
+                          icon={
+                            <StarIcon
+                              sx={{ color: theme.palette.warning.main }}
+                            />
+                          }
+                          label={providers
+                            ?.find((p: ILiquidityProvider) =>
+                              p.offerings?.some(
+                                (off: Ioffering) =>
+                                  off.signature === offering.signature
+                              )
+                            )
+                            ?.rating?.toFixed(1)}
+                          size="small"
+                          sx={{
+                            mr: 1,
+                            backgroundColor: theme.palette.warning.light,
+                          }}
+                        />
+                        <Typography variant="body2" color="textSecondary">
+                          {
+                            providers?.find((p: ILiquidityProvider) =>
+                              p.offerings?.some(
+                                (off: Ioffering) =>
+                                  off.signature === offering.signature
+                              )
+                            )?.name
+                          }
+                        </Typography>
+                      </Box>
                     </Box>
-                  </Box>
-                }
-              />
-              {!isMobile && (
-                <ListItemSecondaryAction>
-                  <IconButton
-                    edge="end"
-                    aria-label="send"
-                    onClick={() => handleOfferingClick(offering)}
-                  >
-                    <SendIcon color="primary" />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              )}
-            </OfferingListItem>
-          ))}
-        </List>
-      </Paper>
+                  }
+                />
+                {!isMobile && (
+                  <ListItemSecondaryAction>
+                    <IconButton
+                      edge="end"
+                      aria-label="send"
+                      onClick={() => handleOfferingClick(offering)}
+                    >
+                      <SendIcon color="primary" />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                )}
+              </OfferingListItem>
+            ))}
+          </List>
+          {filteredOfferings.length < 1 && (
+            <Box sx={{ width: "100%", textAlign: "center", marginTop: "50px" }}>
+              <Typography variant="body2" color="textSecondary">
+                No providers available at this time :(
+              </Typography>
+            </Box>
+          )}
+        </Paper>
+      )}
+
       <StyledModal
         open={isModalOpen}
         onClose={handleModalClose}

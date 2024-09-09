@@ -9,11 +9,15 @@ import {
   Rating,
   Divider,
   IconButton,
+  Box,
+  CircularProgress,
 } from "@mui/material";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { ILiquidityProvider, Ioffering } from "../types";
 import { useUserActions } from "../actions";
+import { formatSettlementTime } from "../utils";
+import toast from "react-hot-toast";
 
 const StyledCard = styled(Card)(({ theme }) => ({
   cursor: "pointer",
@@ -42,27 +46,23 @@ interface OfferingsListProps {
 const OfferingsList: React.FC<OfferingsListProps> = ({ onOfferingSelect }) => {
   const { getLiquidityProviders } = useUserActions();
   const [providers, setProviders] = useState<ILiquidityProvider[] | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchProviders = async () => {
-      const result = await getLiquidityProviders();
-  
-      setProviders(result);
+      setLoading(true);
+      try {
+        const result = await getLiquidityProviders();
+        setLoading(false);
+        setProviders(result);
+      } catch (error:any) {
+        setLoading(false);
+        toast.error("Error fetching providers:", error.message);
+      }
     };
-  
-    fetchProviders();
-  }, [getLiquidityProviders]);
-  
 
-  const formatSettlementTime = (time: number) => {
-    if (time < 60) {
-      return `${time} minutes`;
-    } else {
-      const hours = Math.floor(time / 60);
-      const minutes = time % 60;
-      return `${hours} hours, ${minutes} minutes`;
-    }
-  };
+    fetchProviders();
+  }, []);
 
   const formatOfferingDescription = (offering: Ioffering) => {
     return (
@@ -86,8 +86,18 @@ const OfferingsList: React.FC<OfferingsListProps> = ({ onOfferingSelect }) => {
 
   return (
     <Grid container spacing={4}>
-      {providers &&
-        providers?.length > 0 &&
+      {loading ? (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            width: "100%",
+            marginTop: "50px",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      ) : providers && providers.length > 0 ? (
         providers.map((provider: ILiquidityProvider) => (
           <Grid item xs={12} sm={6} key={provider.did}>
             <StyledCard>
@@ -152,7 +162,6 @@ const OfferingsList: React.FC<OfferingsListProps> = ({ onOfferingSelect }) => {
                               )}
                             </Typography>
                           </Grid>
-                        
                         </Grid>
                       </StyledOfferingCard>
                       {offering.metadata.id !==
@@ -172,7 +181,14 @@ const OfferingsList: React.FC<OfferingsListProps> = ({ onOfferingSelect }) => {
               </CardContent>
             </StyledCard>
           </Grid>
-        ))}
+        ))
+      ) : (
+        <Box sx={{ width: "100%", textAlign: "center", marginTop: "50px" }}>
+          <Typography variant="body2" color="textSecondary">
+            No providers available at this time :(
+          </Typography>
+        </Box>
+      )}
     </Grid>
   );
 };
