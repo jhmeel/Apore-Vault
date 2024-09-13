@@ -41,6 +41,7 @@ const StyledOfferingCard = styled(Card)(({ theme }) => ({
 
 interface OfferingsListProps {
   onOfferingSelect: (offering: any) => void;
+  searchTerm: string;
 }
 
 const OfferingsList: React.FC<OfferingsListProps> = ({ onOfferingSelect }) => {
@@ -55,7 +56,7 @@ const OfferingsList: React.FC<OfferingsListProps> = ({ onOfferingSelect }) => {
         const result = await getLiquidityProviders();
         setLoading(false);
         setProviders(result);
-      } catch (error:any) {
+      } catch (error: any) {
         setLoading(false);
         toast.error("Error fetching providers:", error.message);
       }

@@ -502,7 +502,7 @@ export const useUserActions = () => {
   // bringing them together
   const processOrder = async (customerDid: BearerDid, quote: Quote) => {
     try {
-      const order = await placeOrder(customerDid, quote);
+      const order = await placeOrder(quote);
       const orderStatusUpdate = await pollOrderStatus(order, customerDid);
 
       if (orderStatusUpdate) {

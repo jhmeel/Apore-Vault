@@ -132,7 +132,7 @@ const Txhistory: React.FC = () => {
   useEffect(() => {
     const filtered = transactions?.filter(
       (tx) =>
-        tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        tx.narration?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         tx.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         tx.currencyCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         tx.status?.toLowerCase().includes(searchTerm.toLowerCase())

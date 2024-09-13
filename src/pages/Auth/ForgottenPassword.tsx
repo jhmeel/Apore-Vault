@@ -1,31 +1,38 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, useEffect } from 'react';
 import { Typography } from '@mui/material';
 import { FormContainer, StyledTextField, StyledButton, Logo } from './shared.js';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import logoImg from '../../assets/logo.png'
+import { dotPulse } from "ldrs";
 
 const ForgottenPassword: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<boolean>(false);
+  const [loading, setIsLoading] = useState<boolean>(false);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLDivElement>) => {
     e.preventDefault();
     setError('');
     setSuccess(false);
     try {
+      setIsLoading(true)
       await sendPasswordResetEmail(auth, email);
       setSuccess(true);
     } catch (error) {
       setError((error as Error).message);
+    } finally {
+      setIsLoading(false);
     }
   };
-
+  useEffect(() => {
+    dotPulse.register();
+  }, []);
   return (
-    <FormContainer component="form" onSubmit={handleSubmit}>
+    <FormContainer  onSubmit={handleSubmit}>
       <Logo src={logoImg} alt="Apore" />
       <Typography variant="h3" gutterBottom fontFamily="'Poppins', sans-serif">
         Reset Password
@@ -49,7 +56,13 @@ const ForgottenPassword: React.FC = () => {
         </Typography>
       )}
       <StyledButton type="submit" variant="contained" color="primary" fullWidth>
-        Reset Password
+      {loading ? (
+            <div>
+              <l-dot-pulse size="40" speed="2.5" color="#ccc"></l-dot-pulse>
+            </div>
+          ) : (
+            "Reset password"
+          )}
       </StyledButton>
       <Typography style={{ marginTop: 20 }}variant="body2">
         Remember your password?{' '}

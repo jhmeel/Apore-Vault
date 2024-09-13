@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, ChangeEvent, FormEvent } from "react";
+import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { Typography, Grid, Divider, MenuItem, styled } from "@mui/material";
 import {
   FormContainer,
@@ -9,20 +9,20 @@ import {
   FederatedButton,
 } from "./shared.js";
 import { useNavigate } from "react-router-dom";
-import { auth, db, storage } from "../../firebase";
+import { auth, db } from "../../firebase";
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { africanCountries, IUser } from "../../types";
 import logoImg from "../../assets/logo.png";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { useUserActions } from "../../actions";
 import { holdings } from "../../utils";
+import { dotPulse } from "ldrs";
 
 const StyledPhoneInput = styled(PhoneInput)(({ theme }) => ({
   "& .form-control": {
@@ -66,16 +66,15 @@ const StyledPhoneInput = styled(PhoneInput)(({ theme }) => ({
 const Signup: React.FC = () => {
   const navigate = useNavigate();
   const { createHoldings, createDID } = useUserActions();
+  const [loading, setIsLoading] = useState<boolean>(false);
 
   const [formData, setFormData] = useState<IUser>({
     email: "",
     password: "",
     confirmPassword: "",
     fullName: "",
-    dateOfBirth: "",
     country: "",
     phoneNumber: "",
-    idDocument: null,
   });
   const [error, setError] = useState<string>("");
 
@@ -104,6 +103,7 @@ const Signup: React.FC = () => {
     }
 
     try {
+      setIsLoading(true);
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
@@ -111,25 +111,18 @@ const Signup: React.FC = () => {
       );
       const user = userCredential.user;
 
-      let idDocumentUrl = "";
-      if (formData.idDocument) {
-        const storageRef = ref(storage, `idDocuments/${user.uid}`);
-        await uploadBytes(storageRef, formData.idDocument);
-        idDocumentUrl = await getDownloadURL(storageRef);
-      }
-
       await setDoc(doc(db, "users", user.uid), {
         fullName: formData.fullName,
-        dateOfBirth: formData.dateOfBirth,
         country: formData.country,
         phoneNumber: formData.phoneNumber,
-        idDocumentUrl,
       });
       await createDID(user.uid);
       await createHoldings(user.uid, holdings);
       navigate("/auth/checkin");
     } catch (error) {
       setError((error as Error).message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -155,6 +148,9 @@ const Signup: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    dotPulse.register();
+  }, []);
   return (
     <FormContainer>
       <Logo src={logoImg} alt="Apore" />
@@ -271,18 +267,6 @@ const Signup: React.FC = () => {
               onChange={handleChange}
             />
           </Grid>
-          <Grid item xs={12}>
-            <StyledTextField
-              fullWidth
-              label="Date of Birth"
-              name="dateOfBirth"
-              type="date"
-              required
-              InputLabelProps={{ shrink: true }}
-              value={formData.dateOfBirth}
-              onChange={handleChange}
-            />
-          </Grid>
         </Grid>
         {error && (
           <Typography color="error" align="center" style={{ marginTop: 10 }}>
@@ -296,14 +280,20 @@ const Signup: React.FC = () => {
           fullWidth
           style={{ marginTop: "20px" }}
         >
-          Sign Up
+          {loading ? (
+            <div>
+              <l-dot-pulse size="40" speed="2.5" color="#ccc"></l-dot-pulse>
+            </div>
+          ) : (
+            "Sign Up"
+          )}
         </StyledButton>
       </form>
 
       <Typography variant="body2" style={{ marginTop: 20 }}>
         Already have an account?{" "}
         <Typography
-        variant="body2"
+          variant="body2"
           component="span"
           color="primary"
           style={{ cursor: "pointer" }}

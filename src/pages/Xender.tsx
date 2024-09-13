@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { styled } from "@mui/material/styles";
@@ -226,7 +227,6 @@ const Xender: React.FC = () => {
             {filteredOfferings.map((offering: Ioffering, index) => (
               <OfferingListItem
                 key={offering.metadata.id}
-                button
                 onClick={() => handleOfferingClick(offering)}
                 sx={{
                   backgroundColor:

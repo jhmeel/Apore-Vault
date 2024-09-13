@@ -307,7 +307,7 @@ const Portfolio: React.FC = () => {
                     <Box display="flex" alignItems="center">
                       <Avatar
                         sx={{
-                          bgcolor: holding.color || theme.palette.primary.main,
+                          bgcolor: theme.palette.primary.main,
                           mr: 1,
                         }}
                       >
@@ -350,7 +350,7 @@ const Portfolio: React.FC = () => {
                       <Avatar
                         sx={{
                           bgcolor:
-                            holding.color || theme.palette.secondary.main,
+                            theme.palette.secondary.main,
                           mr: 1,
                         }}
                       >

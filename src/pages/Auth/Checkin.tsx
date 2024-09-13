@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import {
@@ -274,6 +275,8 @@ const Checkin: React.FC = () => {
             )}
           </Grid>
         )}
+
+        
         {showForgotPin && (
           <Fade in={showForgotPin} timeout={500}>
             <Box>

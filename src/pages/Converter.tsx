@@ -45,10 +45,6 @@ const Converter: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const handleModalConfirm = () => {
-    setIsModalOpen(false);
-  };
-
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
@@ -82,7 +78,6 @@ const Converter: React.FC = () => {
         open={isModalOpen}
         offering={selectedOffering}
         onClose={handleModalClose}
-        onConfirm={handleModalConfirm}
       />
     </PageContainer>
   );

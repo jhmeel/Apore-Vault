@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Web3Modal from "web3modal";
-import { ethers } from "ethers";
+import { ethers, BrowserProvider,formatUnits,formatEther } from "ethers";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import CoinbaseWalletSDK from "@coinbase/wallet-sdk";
 import {
@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
   const [web3Modal, setWeb3Modal] = useState<Web3Modal | null>(null);
   const [address, setAddress] = useState<string>("");
   const [provider, setProvider] =
-    useState<ethers.providers.Web3Provider | null>(null);
+    useState<ethers.BrowserProvider | null>(null);
   const [usdtBalance, setUsdtBalance] = useState<string>("0");
   const [ethBalance, setEthBalance] = useState<string>("0");
   const {state} = useWallet()
@@ -303,9 +303,9 @@ const Dashboard: React.FC = () => {
           instance = await web3Modal.connect();
       }
 
-      const provider = new ethers.providers.Web3Provider(instance);
+      const provider = new  BrowserProvider(instance);
       const signer = provider.getSigner();
-      const address = await signer.getAddress();
+      const address = await (await signer).getAddress()
 
       setProvider(provider);
       setAddress(address);
@@ -318,10 +318,11 @@ const Dashboard: React.FC = () => {
         provider
       );
       const usdtBalance = await usdtContract.balanceOf(address);
-      setUsdtBalance(ethers.utils.formatUnits(usdtBalance, 6));
+      setUsdtBalance(formatUnits(usdtBalance, 6));
 
       const ethBalance = await provider.getBalance(address);
-      setEthBalance(ethers.utils.formatEther(ethBalance));
+      setEthBalance(formatEther(ethBalance));
+
 
       closeWalletDrawer();
     } catch (error) {
@@ -518,7 +519,7 @@ const Dashboard: React.FC = () => {
                   <ListItemAvatar>
                     <Avatar
                       sx={{
-                        bgcolor: asset.color || theme.palette.primary.main,
+                        bgcolor: theme.palette.primary.main,
                       }}
                     >
                       {asset.symbol?.[0]}
@@ -544,7 +545,7 @@ const Dashboard: React.FC = () => {
                   <ListItemAvatar>
                     <Avatar
                       sx={{
-                        bgcolor: asset.color || theme.palette.secondary.main,
+                        bgcolor: theme.palette.secondary.main,
                       }}
                     >
                       {asset.symbol?.[0]}
@@ -616,7 +617,6 @@ const Dashboard: React.FC = () => {
             {wallets.map((wallet) => (
               <WalletListItem
                 key={wallet.name}
-                button
                 onClick={() => connectSpecificWallet(wallet.name)}
               >
                 <ListItemAvatar>

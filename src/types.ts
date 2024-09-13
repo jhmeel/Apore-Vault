@@ -3,7 +3,7 @@ export interface ILiquidityProvider {
   name?: string;
   did?: string;
   rating?: number;
-  offerings?: Ioffering[] | Promise<Ioffering[]>;
+  offerings?: Ioffering[];
 }
 
 export type ITxType = "SEND" | "CONVERT" | "RECEIVE";
@@ -15,7 +15,7 @@ export interface ITransaction {
   type?: ITxType;
   amount?: string;
   currencyCode?: string;
-  timestamp?: Date;
+  timestamp?: any;
   status: ITxStatus;
   narration?: string;
   data?: any;
@@ -38,13 +38,12 @@ export interface IUser {
   confirmPassword: string;
   fullName: string;
   enabled2F?:boolean;
-  dateOfBirth: string;
   country: string;
   accessPin?: string;
-  holdings?: IHolding;
-  did?: string;
+  holdings?: IHolding[];
+  did?: any;
   phoneNumber: string;
-  idDocument: File | null;
+  idDocument?: File | null;
 }
 
 export enum NoificationType {
