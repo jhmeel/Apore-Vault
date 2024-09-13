@@ -80,7 +80,7 @@ function App() {
     <>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        {/* <AutoLogout/> */}
+      <AutoLogout/>
         <AuthProvider>
           <UserProvider>
             <Suspense fallback={<MainLoader />}>

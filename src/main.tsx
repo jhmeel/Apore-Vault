@@ -6,6 +6,8 @@ import { Toaster } from "react-hot-toast";
 import "./index.css";
 import { Buffer } from 'buffer';
 import process from 'process';
+import 'string.prototype.matchall';
+
 
 window.Buffer = Buffer;
 window.process = process;
