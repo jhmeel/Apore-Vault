@@ -11,7 +11,13 @@ export default defineConfig({
       protocolImports: true,
     }),
     commonjs(),
-  ],
+  ], build: {
+    rollupOptions: {
+      plugins: [
+        commonjs(),
+      ],
+    },
+  },
   define: {
     'process.env': {},
     global: 'globalThis',
