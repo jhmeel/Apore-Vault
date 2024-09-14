@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import {nodePolyfills} from 'vite-plugin-node-polyfills'
-import vitePluginRequire from "vite-plugin-require";
+import commonjs from '@rollup/plugin-commonjs';
 export default defineConfig({
   plugins: [
     react(),
@@ -9,7 +9,7 @@ export default defineConfig({
       // Whether to polyfill `node:` protocol imports.
       protocolImports: true,
     }),
-    vitePluginRequire()
+    commonjs()
   ],
   define: {
     'process.env': {},
