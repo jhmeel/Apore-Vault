@@ -20,12 +20,9 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        // Prevent chunk splitting
-        manualChunks: () => 'main',
-      },
-    }
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
   define: {
     "process.env": {},
