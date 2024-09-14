@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { IUser } from '../../types';
+import { IUser } from '../types';
 import toast from 'react-hot-toast';
 
 interface AuthContextType {

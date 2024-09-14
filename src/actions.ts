@@ -2,7 +2,7 @@
 import axios from "axios";
 import { useContext } from "react";
 import { UserContext } from "./context/UserContext";
-import liquidityProviders from "../liquidityProvider";
+import liquidityProviders from "./liquidityProvider";
 import {
   IBlogPost,
   ICustomerCredentialProps,
@@ -14,7 +14,7 @@ import {
   ITransaction,
   ITxStatus,
   MatchingPair,
-} from "../types";
+} from "./types";
 import {
   doc,
   updateDoc,
@@ -26,14 +26,20 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import toast from "react-hot-toast";
+import { BearerDid, DidDht } from "@web5/dids";
+import {
+  Close,
+  Offering,
+  Order,
+  OrderStatus,
+  Quote,
+  Rfq,
+  TbdexHttpClient,
+} from "@tbdex/http-client";
 import localforage from "localforage";
+import { Jwt, PresentationExchange } from "@web5/credentials";
 import { useAuth } from "./context/AuthContext";
-import { getLiquidityProviderRating } from "./utils";
-import { Close } from "@tbdex/http-client";
-
-const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3000',
-});
+import { getLiquidityProviderRating} from "./utils";
 
 export const useUserActions = () => {
   const { state, dispatch } = useContext(UserContext);
@@ -62,18 +68,19 @@ export const useUserActions = () => {
         return;
       }
 
+      // Merge new holdings into the user's document
       if (holdings.length > 0) {
         await updateDoc(userDocRef, {
           holdings: arrayUnion(...holdings),
         });
 
+        // Update the local state
         dispatch({ type: "CREATE_HOLDINGS", payload: holdings });
       }
     } catch (error: any) {
       toast.error(`Error creating holdings: ${error.message}`);
     }
   };
-
   const getPortfolioSummary = async (userId: string) => {
     try {
       const userDocRef = doc(db, "users", userId);
@@ -85,6 +92,7 @@ export const useUserActions = () => {
       let totalCryptoValue = 0;
       let totalFiatValue = 0;
 
+      // Aggregate holdings
       holdings.forEach((holding) => {
         if (holding.type === "Crypto") {
           totalCryptoValue += holding.value ?? 0;
@@ -187,7 +195,6 @@ export const useUserActions = () => {
       toast.error(`Error getting articles: ${error.message}`);
     }
   };
-
   const getHoldings = async (userId: string) => {
     try {
       const userDocRef = doc(db, "users", userId);
@@ -196,12 +203,12 @@ export const useUserActions = () => {
       const data = userDoc.data();
       const holdings = data?.holdings || [];
 
+      // Update the state with the fetched holdings
       dispatch({ type: "GET_HOLDINGS", payload: holdings });
     } catch (error: any) {
       toast.error(`Error getting holdings:  ${error.message}`);
     }
   };
-
   const publishArticle = async (article: IBlogPost) => {
     try {
       const articlesCollectionRef = collection(db, "articles");
@@ -209,6 +216,7 @@ export const useUserActions = () => {
       await addDoc(articlesCollectionRef, article);
 
       toast.success("Article successfully published!");
+      //update local state
       await getArticles();
     } catch (error: any) {
       toast.error(`Error publishing article: ${error.message}`);
@@ -222,9 +230,13 @@ export const useUserActions = () => {
       if (userDoc.data()?.did) {
         return;
       }
-      const { data } = await axiosInstance.post('/createDID');
+      const userDid = await DidDht.create({ options: { publish: true } });
+
+      const exportedDid = await userDid.export();
+      const did = JSON.stringify(exportedDid);
+
       await updateDoc(userDocRef, {
-        did: data.did,
+        did: did,
       });
 
       console.log("DID successfully created and saved!");
@@ -238,8 +250,7 @@ export const useUserActions = () => {
       const userDocRef = doc(db, "users", userId);
       const userDoc = await getDoc(userDocRef);
       const data = userDoc.data();
-      const { data: didData } = await axiosInstance.get('/getDID', { params: { did: data?.did } });
-      return didData.did;
+      return await DidDht.import({ portableDid: JSON.parse(data?.did) });
     } catch (error: any) {
       toast.error(`Error fetching DID: ${error.message}`);
       return null;
@@ -289,7 +300,7 @@ export const useUserActions = () => {
     try {
       for (const provider of liquidityProviders) {
         const { did } = provider;
-        const { data: offerings } = await axiosInstance.get('/getOfferings', { params: { pfiDid: did } });
+        const offerings = await TbdexHttpClient.getOfferings({ pfiDid: did });
         await localforage.setItem(did, JSON.stringify(offerings));
       }
     } catch (err: any) {
@@ -305,9 +316,11 @@ export const useUserActions = () => {
       if (cachedOfferings) {
         return JSON.parse(cachedOfferings) as Ioffering[];
       } else {
-        const { data: offerings } = await axiosInstance.get('/getOfferings', { params: { pfiDid: did } });
-        await localforage.setItem(did, JSON.stringify(offerings));
-        return offerings as Ioffering[];
+        // If not found in cache, refetch
+        const offerings = await TbdexHttpClient.getOfferings({ pfiDid: did });
+  
+        await localforage.setItem(did, JSON.stringify(offerings)); // Cache the new offerings
+        return offerings as unknown as Ioffering[];
       }
     } catch (err: any) {
       toast.error(`Error retrieving offerings: ${err.message}`);
@@ -322,7 +335,6 @@ export const useUserActions = () => {
       console.error(`Error deleting offerings: ${err.message}`);
     }
   };
-
   const getAllOfferings = async () => {
     try {
       const offeringsPromises = liquidityProviders.map((provider) =>
@@ -345,6 +357,7 @@ export const useUserActions = () => {
       const didPattern = /^did:dht:/;
       const didKeys = keys.filter((key) => didPattern.test(key));
 
+      // Remove all matching keys
       await Promise.all(didKeys.map((key) => localforage.removeItem(key)));
 
       console.log("All offerings with DID keys have been removed.");
@@ -355,33 +368,80 @@ export const useUserActions = () => {
     }
   };
 
+  const INITIAL_POLL_INTERVAL_MS = 2000;
+  const MAX_ATTEMPTS = 30;
+
   const fetchQuoteFromExchange = async (
     pfiDid: string,
-    customerDid: string,
+    customerDid: BearerDid,
     exchangeId: string
-  ) => {
-    try {
-      const { data: quote } = await axiosInstance.get('/fetchQuote', {
-        params: { pfiDid, customerDid, exchangeId }
-      });
-      return quote;
-    } catch (error: any) {
-      console.error(`Error fetching quote: ${error.message}`);
-      return null;
+  ): Promise<Quote | null> => {
+    let quote: Quote | null = null;
+    let close: Close | null = null;
+    let attempt = 0;
+    let pollIntervalMs = INITIAL_POLL_INTERVAL_MS;
+
+    while (!quote && attempt < MAX_ATTEMPTS) {
+      try {
+        const exchange = await TbdexHttpClient.getExchange({
+          pfiDid,
+          did: customerDid,
+          exchangeId,
+        });
+
+        quote = exchange.find((msg) => msg instanceof Quote) as Quote;
+
+        if (!quote) {
+          close = exchange.find((msg) => msg instanceof Close) as Close;
+          if (close) {
+            break;
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+            pollIntervalMs *= 1.5;
+            attempt++;
+          }
+        }
+      } catch (error: any) {
+        console.error(`Error fetching exchange: ${error.message}`);
+      }
     }
+
+    return quote;
   };
 
-  const createAndSubmitClose = async (quote: any, reason: string) => {
+  const createAndSubmitClose = async (quote: Quote, reason: string) => {
     try {
-      await axiosInstance.post('/createAndSubmitClose', { quote, reason, userDid: userDetails?.did });
+      const close = Close.create({
+        metadata: {
+          from: userDetails?.did,
+          to: quote.metadata.from,
+          exchangeId: quote.metadata.exchangeId,
+          protocol: "1.0",
+        },
+        data: { reason },
+      });
+
+      await close.sign(userDetails?.did);
+      await TbdexHttpClient.submitClose(close);
     } catch (error: any) {
       console.error(`Error creating and submitting close: ${error.message}`);
     }
   };
 
-  const placeOrder = async (quote: any) => {
+  const placeOrder = async (quote: Quote): Promise<Order> => {
     try {
-      const { data: order } = await axiosInstance.post('/placeOrder', { quote, userDid: userDetails?.did });
+      const order = Order.create({
+        metadata: {
+          from: userDetails?.did,
+          to: quote.metadata.from,
+          exchangeId: quote.metadata.exchangeId,
+          protocol: "1.0",
+        },
+      });
+
+      await order.sign(userDetails?.did);
+      await TbdexHttpClient.submitOrder(order);
+
       return order;
     } catch (error: any) {
       console.error(`Error placing order: ${error.message}`);
@@ -389,17 +449,46 @@ export const useUserActions = () => {
     }
   };
 
-  const pollOrderStatus = async (order: any, customerDid: string) => {
-    try {
-      const { data } = await axiosInstance.get('/pollOrderStatus', { params: { order, customerDid } });
-      return data.orderStatusUpdate || data.close;
-    } catch (error: any) {
-      console.error(`Error polling order status: ${error.message}`);
-      return null;
-    }
-  };
+  // Poll for order status updates
+  const pollOrderStatus = async (
+    order: Order,
+    customerDid: BearerDid
+  ): Promise<OrderStatus | null> => {
+    let orderStatusUpdate: OrderStatus | null = null;
+    let close: Close | null = null;
+    const MAX_ATTEMPTS = 30;
+    let attempt = 0;
+    const POLL_INTERVAL_MS = 2000;
 
-  const handleCloseMessage = (close: any) => {
+    while (!close && attempt < MAX_ATTEMPTS) {
+      try {
+        const exchange = await TbdexHttpClient.getExchange({
+          pfiDid: order.metadata.to,
+          did: customerDid,
+          exchangeId: order.metadata.exchangeId,
+        });
+
+        for (const message of exchange) {
+          if (message instanceof OrderStatus) {
+            orderStatusUpdate = message;
+          } else if (message instanceof Close) {
+            close = message;
+            break;
+          }
+        }
+
+        if (!close) {
+          await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+          attempt++;
+        }
+      } catch (error: any) {
+        console.error(`Error polling order status: ${error.message}`);
+      }
+    }
+
+    return orderStatusUpdate;
+  };
+  const handleCloseMessage = (close: Close) => {
     const success = close.data.success;
     const reason = close.data.reason;
 
@@ -410,7 +499,8 @@ export const useUserActions = () => {
     }
   };
 
-  const processOrder = async (customerDid: string, quote: any) => {
+  // bringing them together
+  const processOrder = async (customerDid: BearerDid, quote: Quote) => {
     try {
       const order = await placeOrder(quote);
       const orderStatusUpdate = await pollOrderStatus(order, customerDid);
@@ -420,7 +510,7 @@ export const useUserActions = () => {
       }
 
       const closeMessage = await pollOrderStatus(order, customerDid);
-      if (closeMessage) {
+      if (closeMessage instanceof Close) {
         handleCloseMessage(closeMessage);
       }
     } catch (error: any) {
@@ -449,7 +539,6 @@ export const useUserActions = () => {
       return null;
     }
   };
-
   const generateExchangeStatusValues = (exchangeMessage: any) => {
     if (exchangeMessage instanceof Close) {
       if (
@@ -477,6 +566,7 @@ export const useUserActions = () => {
       const latestMessage = exchange[exchange.length - 1];
       const rfqMessage = exchange.find((message) => message.kind === "rfq");
       const quoteMessage = exchange.find((message) => message.kind === "quote");
+      // console.log('quote', quoteMessage)
       const status = generateExchangeStatusValues(latestMessage);
       const fee = quoteMessage?.data["payin"]?.["fee"];
       const payinAmount = quoteMessage?.data["payin"]?.["amount"];
@@ -515,24 +605,15 @@ export const useUserActions = () => {
   };
 
   const fetchExchange = async (pfiDID: string) => {
-    try {
-      const { data: exchanges } = await axiosInstance.get('/getExchanges', { 
-        params: { pfiDid: pfiDID, userDid: userDetails?.did } 
-      });
-      const mappedExchanges = formatMessages(exchanges);
-      return mappedExchanges;
-    } catch (error: any) {
-      console.error(`Error fetching exchange: ${error.message}`);
-      return [];
-    }
+    const exchanges = await TbdexHttpClient.getExchanges({
+      pfiDid: pfiDID,
+      did: userDetails?.did,
+    });
+    const mappedExchanges = formatMessages(exchanges);
+    return mappedExchanges;
   };
 
-  const updateExchanges = (newTransactions) => {
-    // Implement the logic to update exchanges in your application state
-    // This might involve dispatching an action to update the state
-    // For example:
-    // dispatch({ type: "UPDATE_EXCHANGES", payload: newTransactions });
-  };
+  const updateExchanges = (newTransactions) => {};
 
   const pollExchanges = () => {
     const fetchAllExchanges = async () => {
@@ -551,22 +632,49 @@ export const useUserActions = () => {
       }
     };
 
+    // Run the function immediately
     fetchAllExchanges();
-    setInterval(fetchAllExchanges, 5000);
+
+    // Set up the interval to run the function periodically
+    setInterval(fetchAllExchanges, 5000); // Poll every 5 seconds
   };
 
   const createExchange = async (exchangeProps: IExchangeProps) => {
-    try {
-      await axiosInstance.post('/createExchange', {
-        exchangeProps,
-        userDid: userDetails?.did
-      });
-    } catch (error: any) {
-      console.error(`Error creating exchange: ${error.message}`);
-      throw error;
-    }
-  };
+    const selectedCredentials = PresentationExchange.selectCredentials({
+      vcJwts: exchangeProps.credentials,
+      presentationDefinition:
+        exchangeProps.selectedOffering.data.requiredClaims,
+    });
 
+    const rfq = Rfq.create({
+      metadata: {
+        to: exchangeProps.selectedOffering.metadata.from,
+        from: userDetails?.did,
+        protocol: "1.0",
+      },
+      data: {
+        offeringId: exchangeProps.selectedOffering.metadata.id,
+        payin: {
+          kind: exchangeProps.selectedOffering.data.payin.kind,
+          amount: exchangeProps.txPayload.amount,
+          paymentDetails: {},
+        },
+        payout: {
+          kind: exchangeProps.selectedOffering.data.payout.kind,
+          paymentDetails: {},
+        },
+        claims: selectedCredentials,
+      },
+    });
+
+    await rfq.verifyOfferingRequirements(
+      exchangeProps.selectedOffering as unknown as Offering
+    );
+
+    await rfq.sign(userDetails?.did);
+
+    await TbdexHttpClient.createExchange(rfq);
+  };
   return {
     state,
     createExchange,
@@ -598,7 +706,5 @@ export const useUserActions = () => {
     getTxHistory,
     getPortfolioSummary,
     getArticles,
-    pollExchanges,
-    fetchExchange,
   };
 };
