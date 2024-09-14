@@ -30,8 +30,8 @@ export default defineConfig({
     },
   },
   build: {
-    commonjsOptions: {
-      transformMixedEsModules: true,
+    rollupOptions: {
+      plugins: [commonjs()],
     },
   },
   define: {
