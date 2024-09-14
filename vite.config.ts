@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import {nodePolyfills} from 'vite-plugin-node-polyfills'
-import commonjs from '@vitejs/plugin-commonjs';
 
 export default defineConfig({
   plugins: [
@@ -9,12 +8,14 @@ export default defineConfig({
     nodePolyfills({
       // Whether to polyfill `node:` protocol imports.
       protocolImports: true,
-    }),
-    commonjs()
+    })
   ],
   define: {
     'process.env': {},
     global: 'globalThis',
+  },
+  build: {
+    commonjsOptions: { transformMixedEsModules: true } 
   },
   resolve: {
     alias: {
