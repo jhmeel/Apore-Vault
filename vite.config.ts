@@ -13,6 +13,14 @@ export default defineConfig({
   define: {
     'process.env': {},
     global: 'globalThis',
+  }, 
+  optimizeDeps: {
+    include: ['string.prototype.matchall']
+  },
+  build: {
+    rollupOptions: {
+      external: ['string.prototype.matchall']
+    }
   },
   resolve: {
     alias: {
