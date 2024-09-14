@@ -33,13 +33,6 @@ export default defineConfig({
     commonjsOptions: {
       transformMixedEsModules: true,
     },
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'ethers', '@tbdex/http-client', '@web5/dids'],
-        },
-      },
-    },
   },
   define: {
     "process.env": {},
