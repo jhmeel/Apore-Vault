@@ -9,7 +9,7 @@ export default defineConfig({
       // Whether to polyfill `node:` protocol imports.
       protocolImports: true,
     }),
-    vitePluginRequire.default()
+    vitePluginRequire()
   ],
   define: {
     'process.env': {},
