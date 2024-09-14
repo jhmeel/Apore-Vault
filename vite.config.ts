@@ -12,7 +12,7 @@ export default defineConfig({
       protocolImports: true,
     }),
     legacy({
-      targetgis: ["defaults", "not IE 11"],
+      targets: ["defaults", "not IE 11"],
     }),
   ],
   resolve: {
