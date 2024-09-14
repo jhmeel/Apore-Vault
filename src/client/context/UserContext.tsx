@@ -1,6 +1,6 @@
 import React, { createContext, useReducer, ReactNode, useContext, useEffect } from "react";
 import { userReducer } from "../reducer";
-import { IUserState, IAction } from "../types";
+import { IUserState, IAction } from "../../types";
 
 const STORAGE_KEY = 'apore_state';
 

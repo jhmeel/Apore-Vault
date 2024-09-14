@@ -46,7 +46,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
-import { IHolding, INotification } from "../types";
+import { IHolding, INotification } from "../../types";
 import { useWallet } from "../context/UserContext";
 
 const StyledCard = styled(Card)(({ theme }) => ({

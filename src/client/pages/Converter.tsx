@@ -10,7 +10,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import OfferingsList from "../components/OfferingList";
 import ExchangeTxModal from "../components/ExchangeTxModal";
-import { Ioffering } from "../types";
+import { Ioffering } from "../../types";
 
 const PageContainer = styled(Container)(({ theme }) => ({
   padding: theme.spacing(2),

@@ -1,6 +1,6 @@
 import React, { useState, FormEvent, useEffect } from 'react';
 import { Typography } from '@mui/material';
-import { FormContainer, StyledTextField, StyledButton, Logo } from './shared.js';
+import { FormContainer, StyledTextField, StyledButton, Logo } from './shared';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';

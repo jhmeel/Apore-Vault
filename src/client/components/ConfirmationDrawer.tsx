@@ -18,14 +18,14 @@ import {
   Tooltip,
 } from "@mui/material";
 import toast from "react-hot-toast";
-import { Ioffering, ITransaction, ITxType } from "../types";
+import { Ioffering, ITransaction, ITxType } from "../../types";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import { getExchangeAmount, transactionFeeCalculator } from "../utils";
 import { useUserActions } from "../actions";
-import { NoificationType } from "../types";
+import { NoificationType } from "../../types";
 import { v4 as uuidv4 } from "uuid";
 import RatingModal from "./RatingModal";
 import {

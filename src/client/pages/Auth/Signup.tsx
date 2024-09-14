@@ -16,7 +16,7 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { africanCountries, IUser } from "../../types";
+import { africanCountries, IUser } from "../../../types";
 import logoImg from "../../assets/logo.png";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";

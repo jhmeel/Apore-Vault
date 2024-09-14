@@ -43,7 +43,7 @@ import HelpIcon from "@mui/icons-material/Help";
 import SupportIcon from "@mui/icons-material/Support";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useNavigate } from "react-router-dom";
-import { IHolding } from "../types";
+import { IHolding } from "../../types";
 import Logout from "./Auth/Logout.js";
 import { useAuth } from "../context/AuthContext";
 import { useUserActions } from "../actions";
