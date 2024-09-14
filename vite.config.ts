@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import commonjs from "@rollup/plugin-commonjs";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
-import legacy from "@vitejs/plugin-legacy";
 
 export default defineConfig({
   plugins: [
@@ -11,9 +10,7 @@ export default defineConfig({
     nodePolyfills({
       protocolImports: true,
     }),
-    legacy({
-      targets: ["defaults", "not IE 11"],
-    }),
+  
   ],
   resolve: {
     alias: {
@@ -24,8 +21,11 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      plugins: [commonjs()],
-    },
+      output: {
+        // Prevent chunk splitting
+        manualChunks: () => 'main',
+      },
+    }
   },
   define: {
     "process.env": {},
