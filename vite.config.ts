@@ -10,8 +10,8 @@ export default defineConfig({
       // Whether to polyfill `node:` protocol imports.
       protocolImports: true,
     }),
-    babel(),
-    commonjs()
+    commonjs(),
+    babel()
   ],
   define: {
     'process.env': {},
