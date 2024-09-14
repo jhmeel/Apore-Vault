@@ -1,7 +1,8 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react-swc';
-import commonjs from '@rollup/plugin-commonjs';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import commonjs from "@rollup/plugin-commonjs";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
+import legacy from "@vitejs/plugin-legacy";
 
 export default defineConfig({
   plugins: [
@@ -10,23 +11,24 @@ export default defineConfig({
     nodePolyfills({
       protocolImports: true,
     }),
+    legacy({
+      targetgis: ["defaults", "not IE 11"],
+    }),
   ],
   resolve: {
     alias: {
-      util: 'util',
-      events: 'events',
-      stream: 'stream-browserify',
+      util: "util",
+      events: "events",
+      stream: "stream-browserify",
     },
   },
   build: {
     rollupOptions: {
-      plugins: [
-        commonjs(),
-      ],
+      plugins: [commonjs()],
     },
   },
   define: {
-    'process.env': {},
-    global: 'globalThis',
+    "process.env": {},
+    global: "globalThis",
   },
 });

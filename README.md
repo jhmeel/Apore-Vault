@@ -1,5 +1,7 @@
 # Apore Vault - Multi-Currency Wallet
+
 [🌐Live Link](https://apore-vault.web.app)
+
 **Apore Vault** is a secure, multi-currency wallet that simplifies the management of both traditional and digital assets. It offers seamless currency exchanges, easy transfers, and top-notch security features like two-factor authentication (2FA). Designed for efficiency, Apore Vault integrates with two Public Financial Institutions (PFIs) to provide users with a trusted solution for cross-border money transfers, along with ratings to help users select the best option.
 
 ## Key Features
