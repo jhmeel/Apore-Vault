@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import {nodePolyfills} from 'vite-plugin-node-polyfills'
 import commonjs from '@rollup/plugin-commonjs';
-import babel from 'vite-plugin-babel';
+
 export default defineConfig({
   plugins: [
     react(),
@@ -11,7 +11,6 @@ export default defineConfig({
       protocolImports: true,
     }),
     commonjs(),
-    babel()
   ],
   define: {
     'process.env': {},
