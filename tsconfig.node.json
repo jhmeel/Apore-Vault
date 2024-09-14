@@ -12,8 +12,8 @@
     "moduleDetection": "force",
     "noEmit": true,
     "allowJs": true,
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
+        "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true
 
 
     /* Linting */

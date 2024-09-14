@@ -44,7 +44,7 @@ export default defineConfig({
   build: {
     commonjsOptions: {
       transformMixedEsModules: true,
-      include: [/node_modules/],
+
     },
     rollupOptions: {
       output: {
