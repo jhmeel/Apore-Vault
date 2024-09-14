@@ -49,7 +49,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'ethers'],
           tbdex: ['@tbdex/http-client'],
           web5: ['@web5/dids'],
         },
