@@ -1,17 +1,24 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
-import {nodePolyfills} from 'vite-plugin-node-polyfills'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
 import commonjs from '@rollup/plugin-commonjs';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 export default defineConfig({
   plugins: [
     react(),
+    commonjs(),
     nodePolyfills({
-      // Whether to polyfill `node:` protocol imports.
       protocolImports: true,
     }),
-    commonjs(),
-  ], build: {
+  ],
+  resolve: {
+    alias: {
+      util: 'util',
+      events: 'events',
+      stream: 'stream-browserify',
+    },
+  },
+  build: {
     rollupOptions: {
       plugins: [
         commonjs(),
@@ -22,12 +29,4 @@ export default defineConfig({
     'process.env': {},
     global: 'globalThis',
   },
-  
-  resolve: {
-    alias: {
-      util: 'util',
-      events: 'events',
-      stream: 'stream-browserify',
-    },
-  },
-})
+});

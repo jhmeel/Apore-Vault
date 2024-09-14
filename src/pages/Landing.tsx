@@ -104,11 +104,6 @@ const whyChooseUs = [
       "Multi-factor authentication, biometric login, and cold storage options to keep your assets safe.",
   },
   {
-    title: "24/7 Customer Support",
-    description:
-      "Our dedicated team is always available to assist you with any questions or concerns.",
-  },
-  {
     title: "Regular Updates and Improvements",
     description:
       "We continuously enhance our platform based on user feedback and technological advancements.",
