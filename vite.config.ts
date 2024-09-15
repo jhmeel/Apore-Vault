@@ -21,6 +21,8 @@ export default defineConfig({
         /\/node_modules\/@tbdex\/http-client/,
         /\/node_modules\/@web5\/dids/,
         /\/node_modules\/multiformats/,
+        /\/node_modules\/string.prototype.matchall/,
+        /\/node_modules\/level-transcoder/,
       ],
       transformMixedEsModules: true,
     }),
@@ -61,7 +63,7 @@ export default defineConfig({
     global: 'globalThis',
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'ethers', '@tbdex/http-client', '@web5/dids', 'multiformats'],
+    include: ['react', 'react-dom', 'ethers','level-transcoder','string.prototype.matchall', '@tbdex/http-client', '@web5/dids', 'multiformats'],
     esbuildOptions: {
       target: 'esnext',
       supported: { bigint: true },
