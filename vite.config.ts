@@ -16,6 +16,14 @@ export default defineConfig({
     }),
     commonjs({
       requireReturnsDefault: 'auto',
+      include: [
+        /node_modules/,
+        /\/node_modules\/@tbdex\/http-client/,
+        /\/node_modules\/@web5\/dids/,
+        /\/node_modules\/multiformats/,
+        /\/node_modules\/string.prototype.matchall/,
+        /\/node_modules\/level-transcoder/,
+      ],
       transformMixedEsModules: true,
     }),
     nodePolyfills({
@@ -39,14 +47,26 @@ export default defineConfig({
     commonjsOptions: {
       transformMixedEsModules: true,
 
-    }
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          tbdex: ['@tbdex/http-client'],
+          web5: ['@web5/dids'],
+          levelTranscoder:['level-transcoder'],
+
+        },
+      },
+    },
+    sourcemap: true,
   },
   define: {
     'process.env': {},
     global: 'globalThis',
   },
   optimizeDeps: {
-   esbuildOptions: {
+    include: ['level-transcoder','string.prototype.matchall', '@tbdex/http-client', '@web5/dids'],
+    esbuildOptions: {
       target: 'esnext',
       supported: { bigint: true },
     },
