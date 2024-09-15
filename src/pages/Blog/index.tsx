@@ -74,7 +74,7 @@ const Blog: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 10 }}>
        <Typography variant="h2" gutterBottom fontFamily="'Poppins', sans-serif">
-        Explore Crypto Blog
+        Blog
       </Typography>
       <SearchBar
         fullWidth

@@ -1,8 +1,8 @@
 # Apore Vault - Multi-Currency Wallet
 
-[🌐Live Link](https://apore-vault.web.app)
+[Live Url](https://apore-vault.web.app/)
 
-**Apore Vault** is a secure, multi-currency wallet that simplifies the management of both traditional and digital assets. It offers seamless currency exchanges, easy transfers, and top-notch security features like two-factor authentication (2FA). Designed for efficiency, Apore Vault integrates with two Public Financial Institutions (PFIs) to provide users with a trusted solution for cross-border money transfers, along with ratings to help users select the best option.
+**Apore Vault** is a  secure, multi-currency wallet that simplifies the management of both traditional and digital assets. It offers seamless currency exchanges, easy transfers, and top-notch security features like two-factor authentication (2FA). Designed for efficiency, Apore Vault integrates with two Public Financial Institutions (PFIs) to provide users with a trusted solution for cross-border money transfers, along with ratings to help users select the best option.
 
 ## Key Features
 
@@ -18,7 +18,7 @@
 
 ## Liquidity Providers
 
-Apore Vault integrates with two key Liquidity Providers to facilitate seamless currency exchange and cross-border money transfers. Each Liquidity Provider supports different offerings:
+Apore Vault integrates with two key Liquidity Providers, **AquaFinance Capital** and **Flowback Financial** to facilitate seamless currency exchange and cross-border money transfers. Each Liquidity Provider supports different offerings:
 
 - **AquaFinance Capital**:
   - DID: `did:dht:3fkz5ssfxbriwks3iy5nwys3q5kyx64ettp9wfn1yfekfkiguj1y`
@@ -44,10 +44,10 @@ Apore Vault generates profit through **transaction fees** on every transfer and 
 
 ## Optionality
 
-Apore Vault integrates with two PFIs and the above-mentioned Liquidity Providers to give users the best cross-border money transfer options. Users are guided by **user ratings** on transaction speed, fees, and overall service quality, ensuring they choose the best provider for their needs.
+Apore Vault integrates with two PFIs mentioned above to give users the best cross-border money transfer options. Users are guided by **user ratings** on transaction speed, fees, and overall service quality, ensuring they choose the best provider for their needs.
 
 ## Customer Management
- Apore Vault ensures that users' personal information is kept private and secure.
+ Apore Vault ensures that users' personal information is kept private and secure by utilizing firestore for storage.
 
 ## Customer Satisfaction
 
@@ -69,7 +69,7 @@ To maintain a high level of service, Apore Vault tracks **customer satisfaction*
 
 ## Tech Stack
 
-- **React (TypeScript)**
+- **React%20(TypeScript)**
 - **Firebase**
 - **tbDex SDK**
 - **Material-UI**
@@ -98,5 +98,19 @@ To maintain a high level of service, Apore Vault tracks **customer satisfaction*
    npm run dev
    ```
 
+
+![App Screenshot](./public/Screenshot%20(240).png)
+![App Screenshot](./public/Screenshot%20(241).png)
+![App Screenshot](./public/Screenshot%20(242).png)
+![App Screenshot](./public/Screenshot%20(243).png)
+![App Screenshot](./public/Screenshot%20(244).png)
+![App Screenshot](./public/Screenshot%20(245).png)
+![App Screenshot](./public/Screenshot%20(246).png)
+![App Screenshot](./public/Screenshot%20(247).png)
+![App Screenshot](./public/Screenshot%20(249).png)
+![App Screenshot](./public/Screenshot%20(251).png)
+![App Screenshot](./public/Screenshot%20(253).png)
+![App Screenshot](./public/Screenshot%20(254).png)
+![App Screenshot](./public/Screenshot%20(255).png)
 
 
