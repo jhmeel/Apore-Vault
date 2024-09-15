@@ -23,7 +23,7 @@
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^26.0.1",
     "@swc/core": "^1.7.22",
-    "@tbdex/http-client": "^1.1.0",
+    "@tbdex/http-client": "^2.2.1",
     "@walletconnect/web3-provider": "^1.8.0",
     "@web5/dids": "^1.1.1",
     "abstract-level": "^2.0.0",
