@@ -53,6 +53,8 @@ export default defineConfig({
         manualChunks: {
           tbdex: ['@tbdex/http-client'],
           web5: ['@web5/dids'],
+          levelTranscoder:['level-transcoder'],
+
         },
       },
     },
@@ -63,7 +65,7 @@ export default defineConfig({
     global: 'globalThis',
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'ethers','level-transcoder','string.prototype.matchall', '@tbdex/http-client', '@web5/dids', 'multiformats'],
+    include: ['level-transcoder','string.prototype.matchall', '@tbdex/http-client', '@web5/dids'],
     esbuildOptions: {
       target: 'esnext',
       supported: { bigint: true },
