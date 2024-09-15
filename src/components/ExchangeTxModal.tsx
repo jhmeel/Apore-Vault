@@ -11,7 +11,7 @@ import {
   InputAdornment,
 } from "@mui/material";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
-import { Ioffering } from "../../types";
+import { Ioffering } from "../types";
 import { formatSettlementTime, getExchangeAmount } from "../utils";
 import ConfirmationDrawer from "./ConfirmationDrawer";
 

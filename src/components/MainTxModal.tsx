@@ -10,7 +10,7 @@ import {
   TextField,
   InputAdornment,
 } from '@mui/material';
-import { Ioffering } from '../../types';
+import { Ioffering } from '../types';
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import { formatSettlementTime } from '../utils';
 
