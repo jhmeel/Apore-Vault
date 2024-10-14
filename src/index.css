@@ -2,13 +2,13 @@
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light dark;
-  color:#000000;
+  color: #000000;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -24,7 +24,7 @@ a {
   border-radius: 4px !important;
   font-size: 16px !important;
   padding-left: 48px !important;
-  background:transparent;
+  background: transparent;
 }
 
 .react-tel-input .flag-dropdown {
@@ -55,8 +55,6 @@ a {
   background: #176884;
 }
 
-
-
 .hidden-scrollbar {
   overflow-x: auto;
   scrollbar-width: none; /* Firefox */
@@ -66,3 +64,4 @@ a {
 .hidden-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
+

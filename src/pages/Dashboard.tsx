@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Web3Modal from "web3modal";
-import { ethers, BrowserProvider,formatUnits,formatEther } from "ethers";
+import { ethers, BrowserProvider, formatUnits, formatEther } from "ethers";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import CoinbaseWalletSDK from "@coinbase/wallet-sdk";
 import {
@@ -34,7 +34,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import RefreshIcon from "@mui/icons-material/Update";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
+import NotificationsOffIcon from "@mui/icons-material/NotificationsOff";
 import {
   LineChart,
   Line,
@@ -94,26 +94,6 @@ const WalletButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-const WalletDrawer = styled(Drawer)(() => ({
-  "& .MuiDrawer-paper": {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    height: "50%",
-  },
-}));
-
-const WalletList = styled(List)(({ theme }) => ({
-  padding: theme.spacing(1),
-}));
-
-const WalletListItem = styled(ListItem)(({ theme }) => ({
-  borderRadius: 12,
-  marginBottom: theme.spacing(2),
-  "&:hover": {
-    backgroundColor: theme.palette.action.hover,
-  },
-}));
-
 const ActionButton = styled(Button)(({ theme }) => ({
   margin: theme.spacing(1),
 }));
@@ -135,15 +115,13 @@ const Dashboard: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [notificationsCount, setNotificationsCount] = useState(1);
-  const [walletDrawerOpen, setWalletDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const [web3Modal, setWeb3Modal] = useState<Web3Modal | null>(null);
   const [address, setAddress] = useState<string>("");
-  const [provider, setProvider] =
-    useState<ethers.BrowserProvider | null>(null);
+  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [usdtBalance, setUsdtBalance] = useState<string>("0");
   const [ethBalance, setEthBalance] = useState<string>("0");
-  const {state} = useWallet()
+  const { state } = useWallet();
   const { userDetails } = useAuth();
   const [filteredCryptoAssets, setFilteredCryptoAssets] = useState<IHolding[]>(
     []
@@ -151,18 +129,29 @@ const Dashboard: React.FC = () => {
   const [filteredFiatAssets, setFilteredFiatAssets] = useState<IHolding[]>([]);
   const [notifications, setNotifications] = useState<INotification[]>([]);
 
-  useEffect(() => {
+  const initWeb3Modal = useCallback(() => {
     const providerOptions = {
       walletconnect: {
         package: WalletConnectProvider,
         options: {
           infuraId: "fd20f6567f094ba5b0e8a0ae6d8cbb9c",
+          qrcodeModalOption: {
+            mobileLinks: [
+              "rainbow",
+              "metamask",
+              "argent",
+              "trust",
+              "imtoken",
+              "pillar",
+            ],
+            desktopLinks: ["encrypted ink", "metamask", "coinbase"],
+          },
         },
       },
       coinbasewallet: {
         package: CoinbaseWalletSDK,
         options: {
-          appName: "Crimpy",
+          appName: "Apore",
           infuraId: "fd20f6567f094ba5b0e8a0ae6d8cbb9c",
         },
       },
@@ -172,10 +161,15 @@ const Dashboard: React.FC = () => {
       network: "mainnet",
       cacheProvider: true,
       providerOptions,
+      theme: "dark",
     });
 
     setWeb3Modal(newWeb3Modal);
   }, []);
+
+  useEffect(() => {
+    initWeb3Modal();
+  }, [initWeb3Modal]);
 
   useEffect(() => {
     const bc = new BroadcastChannel("EVENTS");
@@ -219,13 +213,13 @@ const Dashboard: React.FC = () => {
 
       setFilteredCryptoAssets(
         cryptoAssets.filter((asset) =>
-          asset.name.toLowerCase().includes(searchQuery.toLowerCase())
+          asset?.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
 
       setFilteredFiatAssets(
         fiatAssets.filter((asset) =>
-          asset.name.toLowerCase().includes(searchQuery.toLowerCase())
+          asset?.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
     }
@@ -264,48 +258,17 @@ const Dashboard: React.FC = () => {
     return `$${balance}`;
   };
 
-  const openWalletDrawer = () => {
-    setWalletDrawerOpen(true);
-  };
-
-  const closeWalletDrawer = () => {
-    setWalletDrawerOpen(false);
-  };
-
-  const connectSpecificWallet = async (walletType: string) => {
+  const connectWallet = async () => {
     if (!web3Modal) {
       console.error("Web3Modal not initialized.");
       return;
     }
 
     try {
-      let instance;
-      switch (walletType) {
-        case "MetaMask":
-          instance = await web3Modal.connectTo("injected");
-          break;
-        case "WalletConnect":
-          instance = await web3Modal.connectTo("walletconnect");
-          break;
-        case "Coinbase Wallet":
-          instance = await web3Modal.connectTo("coinbasewallet");
-          break;
-        case "Trust Wallet":
-          instance = await web3Modal.connectTo("walletconnect");
-          break;
-        case "OKX Wallet":
-          instance = await web3Modal.connectTo("walletconnect");
-          break;
-        case "Binance Chain Wallet":
-          instance = await web3Modal.connectTo("binancechainwallet");
-          break;
-        default:
-          instance = await web3Modal.connect();
-      }
-
-      const provider = new  BrowserProvider(instance);
+      const instance = await web3Modal.connect();
+      const provider = new BrowserProvider(instance);
       const signer = provider.getSigner();
-      const address = await (await signer).getAddress()
+      const address = await (await signer).getAddress();
 
       setProvider(provider);
       setAddress(address);
@@ -322,23 +285,17 @@ const Dashboard: React.FC = () => {
 
       const ethBalance = await provider.getBalance(address);
       setEthBalance(formatEther(ethBalance));
-
-
-      closeWalletDrawer();
     } catch (error) {
       toast.error("Failed to connect wallet");
       console.error("Failed to connect wallet:", error);
     }
   };
 
-  const wallets = [
-    { name: "MetaMask", icon: "🦊" },
-    { name: "WalletConnect", icon: "🔗" },
-    { name: "Coinbase Wallet", icon: "💰" },
-    { name: "Trust Wallet", icon: "🔐" },
-    { name: "OKX Wallet", icon: "🚀" },
-    { name: "Binance Chain Wallet", icon: "🏦" },
-  ];
+  useEffect(() => {
+    if (web3Modal && web3Modal.cachedProvider) {
+      connectWallet();
+    }
+  }, [web3Modal]);
 
   return (
     <Box
@@ -348,7 +305,7 @@ const Dashboard: React.FC = () => {
         padding: 1,
         paddingBottom: "4rem",
         position: "relative",
-        zIndex: "10",
+    
       }}
     >
       <Box
@@ -364,7 +321,7 @@ const Dashboard: React.FC = () => {
           {!address ? (
             <WalletButton
               startIcon={<AccountBalanceWalletIcon />}
-              onClick={openWalletDrawer}
+              onClick={connectWallet}
               style={{ fontSize: 10 }}
               sx={{ mr: 2 }}
             >
@@ -381,9 +338,13 @@ const Dashboard: React.FC = () => {
             </WalletButton>
           )}
           <IconButton onClick={() => setDrawerOpen(true)}>
-           {state.notificationsEnabled?<Badge badgeContent={notificationsCount} color="error">
-              <NotificationsIcon />
-            </Badge> :  <NotificationsOffIcon /> } 
+            {state.notificationsEnabled ? (
+              <Badge badgeContent={notificationsCount} color="error">
+                <NotificationsIcon />
+              </Badge>
+            ) : (
+              <NotificationsOffIcon />
+            )}
           </IconButton>
         </Box>
       </Box>
@@ -569,65 +530,42 @@ const Dashboard: React.FC = () => {
         </List>
       </StyledCard>
 
-      {state.notificationsEnabled && <SwipeableDrawer
-        anchor="top"
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        onOpen={() => setDrawerOpen(true)}
-        sx={{ height: "auto" }}
-      >
-        <Box sx={{ padding: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Notifications
-          </Typography>
-          <List style={{ maxHeight: "300px", overflowY: "auto" }}>
-            {notifications.length > 0 ? (
-              notifications.map((notification: INotification, i) => (
-                <ListItem key={i}>
-                  <ListItemAvatar>
-                    {notification?.icon && (
-                      <Avatar>{notification?.icon}</Avatar>
-                    )}
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={notification.title}
-                    secondary={notification.content}
-                  />
-                </ListItem>
-              ))
-            ) : (
-              <Typography variant="body1" align="center">
-                No notifications yet ☹
-              </Typography>
-            )}
-          </List>
-        </Box>
-      </SwipeableDrawer> }
-
-      <WalletDrawer
-        anchor="bottom"
-        open={walletDrawerOpen}
-        onClose={closeWalletDrawer}
-      >
-        <Box sx={{ padding: theme.spacing(2) }}>
-          <Typography variant="body1" gutterBottom>
-            Connect Your Wallet
-          </Typography>
-          <WalletList>
-            {wallets.map((wallet) => (
-              <WalletListItem
-                key={wallet.name}
-                onClick={() => connectSpecificWallet(wallet.name)}
-              >
-                <ListItemAvatar>
-                  <Avatar>{wallet.icon}</Avatar>
-                </ListItemAvatar>
-                <ListItemText primary={wallet.name} />
-              </WalletListItem>
-            ))}
-          </WalletList>
-        </Box>
-      </WalletDrawer>
+      {state.notificationsEnabled && (
+        <SwipeableDrawer
+          anchor="top"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          onOpen={() => setDrawerOpen(true)}
+          sx={{ height: "auto" }}
+        >
+          <Box sx={{ padding: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Notifications
+            </Typography>
+            <List style={{ maxHeight: "300px", overflowY: "auto" }}>
+              {notifications.length > 0 ? (
+                notifications.map((notification: INotification, i) => (
+                  <ListItem key={i}>
+                    <ListItemAvatar>
+                      {notification?.icon && (
+                        <Avatar>{notification?.icon}</Avatar>
+                      )}
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={notification.title}
+                      secondary={notification.content}
+                    />
+                  </ListItem>
+                ))
+              ) : (
+                <Typography variant="body1" align="center">
+                  No notifications yet ☹
+                </Typography>
+              )}
+            </List>
+          </Box>
+        </SwipeableDrawer>
+      )}
     </Box>
   );
 };

@@ -47,7 +47,7 @@ const ForgottenPassword: React.FC = () => {
       />
       {error && (
         <Typography color="error" align="center" style={{ marginTop: 10 }}>
-          {error}
+        {error.replace("Firebase:","")}
         </Typography>
       )}
       {success && (

@@ -2,28 +2,13 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import commonjs from "@rollup/plugin-commonjs";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
-import { visualizer } from "rollup-plugin-visualizer";
-import { babel } from '@rollup/plugin-babel';
+import { visualizer } from "rollup-plugin-visualizer"
 
 export default defineConfig({
   plugins: [
     react(),
-    babel({
-      babelHelpers: 'bundled',
-      presets: ['@babel/preset-env', '@babel/preset-react'],
-      plugins: ['@babel/plugin-transform-runtime'],
-      exclude: 'node_modules/**',
-    }),
     commonjs({
       requireReturnsDefault: 'auto',
-      include: [
-        /node_modules/,
-        /\/node_modules\/@tbdex\/http-client/,
-        /\/node_modules\/@web5\/dids/,
-        /\/node_modules\/multiformats/,
-        /\/node_modules\/string.prototype.matchall/,
-        /\/node_modules\/level-transcoder/,
-      ],
       transformMixedEsModules: true,
     }),
     nodePolyfills({

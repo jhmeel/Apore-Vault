@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import {
   Typography,
@@ -8,7 +6,6 @@ import {
   Box,
   TextField,
   Link,
-  Fade,
   Container,
   CircularProgress,
   IconButton,
@@ -25,11 +22,11 @@ import LockOpenIcon from '@mui/icons-material/LockOpen';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const PinInput = styled("input")(({ theme }) => ({
-  width: "50px",
-  height: "60px",
-  fontSize: "28px",
+  width: "40px",
+  height: "50px",
+  fontSize: "24px",
   textAlign: "center",
-  margin: "0 5px",
+  margin: "0 4px",
   border: "none",
   borderBottom: `2px solid ${theme.palette.primary.main}`,
   transition: "all 0.3s ease",
@@ -88,7 +85,6 @@ const Checkin: React.FC = () => {
   const [confirmPin, setConfirmPin] = useState(["", "", "", ""]);
   const [hasPin, setHasPin] = useState(false);
   const [isCreatingPin, setIsCreatingPin] = useState(false);
-  const [showConfirmPin, setShowConfirmPin] = useState(false);
   const [email, setEmail] = useState("");
   const [showForgotPin, setShowForgotPin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -128,10 +124,6 @@ const Checkin: React.FC = () => {
       );
       if (nextInput) nextInput.focus();
     }
-
-    if (isCreatingPin && !isConfirm && index === 3 && value !== "") {
-      setShowConfirmPin(true);
-    }
   };
 
   const handleSubmit = async () => {
@@ -151,7 +143,7 @@ const Checkin: React.FC = () => {
         );
         toast.success("PIN created successfully and 2FA enabled");
         navigate("/dashboard");
-      } catch (error:any) {
+      } catch (error) {
         toast.error("Error creating PIN. Please try again.");
       }
     } else {
@@ -169,7 +161,7 @@ const Checkin: React.FC = () => {
       await sendPasswordResetEmail(auth, email);
       toast.success("Reset link sent to your email");
       setShowForgotPin(false);
-    } catch (error:any) {
+    } catch (error) {
       toast.error("Error sending reset link. Please try again.");
     }
   };
@@ -206,42 +198,58 @@ const Checkin: React.FC = () => {
             : `Welcome Back, ${userDetails?.fullName.split(" ")[0]} 👋`}
         </Typography>
         {!showForgotPin && (
-          <Grid container direction="column" spacing={4}>
-            <Grid item>
-              <Typography variant="body1" align="center" gutterBottom>
-                {isCreatingPin
-                  ? showConfirmPin
-                    ? "Confirm your PIN"
-                    : "Choose a 4-digit PIN"
-                  : "Enter your 4-digit PIN"}
-              </Typography>
-              <Box display="flex" justifyContent="center" mt={2}>
-                {(isCreatingPin && showConfirmPin ? confirmPin : pin).map((digit, index) => (
-                  <PinInput
-                    key={index}
-                    id={`pin-${isCreatingPin && showConfirmPin ? "confirm-" : ""}${index}`}
-                    type="password"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handlePinChange(index, e.target.value, isCreatingPin && showConfirmPin)}
-                  />
-                ))}
-              </Box>
-            </Grid>
-            {isCreatingPin && showConfirmPin && (
+          <Grid container direction="column" spacing={3}>
+            {isCreatingPin ? (
+              <>
+                {!pin[3] && <Grid item>
+                  <Typography variant="body2" align="center" gutterBottom>
+                    Choose a 4-digit PIN
+                  </Typography>
+                  <Box display="flex" justifyContent="center" mt={1}>
+                    {pin.map((digit, index) => (
+                      <PinInput
+                        key={`create-${index}`}
+                        id={`pin-${index}`}
+                        type="password"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handlePinChange(index, e.target.value)}
+                      />
+                    ))}
+                  </Box>
+                </Grid>}
+               {pin[3] && <Grid item>
+                  <Typography variant="body2" align="center" gutterBottom>
+                    Confirm your PIN
+                  </Typography>
+                  <Box display="flex" justifyContent="center" mt={1}>
+                    {confirmPin.map((digit, index) => (
+                      <PinInput
+                        key={`confirm-${index}`}
+                        id={`pin-confirm-${index}`}
+                        type="password"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handlePinChange(index, e.target.value, true)}
+                      />
+                    ))}
+                  </Box>
+                </Grid>}
+              </>
+            ) : (
               <Grid item>
-                <Typography variant="body1" align="center" gutterBottom>
-                  Confirm your PIN
+                <Typography variant="body2" align="center" gutterBottom>
+                  Enter your 4-digit PIN
                 </Typography>
-                <Box display="flex" justifyContent="center" mt={2}>
-                  {confirmPin.map((digit, index) => (
+                <Box display="flex" justifyContent="center" mt={1}>
+                  {pin.map((digit, index) => (
                     <PinInput
                       key={index}
-                      id={`pin-confirm-${index}`}
+                      id={`pin-${index}`}
                       type="password"
                       maxLength={1}
                       value={digit}
-                      onChange={(e) => handlePinChange(index, e.target.value, true)}
+                      onChange={(e) => handlePinChange(index, e.target.value)}
                     />
                   ))}
                 </Box>
@@ -251,7 +259,7 @@ const Checkin: React.FC = () => {
               <StyledButton
                 onClick={handleSubmit}
                 disabled={
-                  (isCreatingPin && showConfirmPin
+                  (isCreatingPin
                     ? [...pin, ...confirmPin]
                     : pin
                   ).some((digit) => digit === "")
@@ -275,37 +283,34 @@ const Checkin: React.FC = () => {
             )}
           </Grid>
         )}
-
         
         {showForgotPin && (
-          <Fade in={showForgotPin} timeout={500}>
-            <Box>
-              <Typography
-                variant="h6"
-                gutterBottom
-                fontFamily="'Poppins', sans-serif"
-                sx={{ textAlign: "center" }}
-              >
-                Reset Your PIN
-              </Typography>
-              <TextField
-                fullWidth
-                label="Email"
-                variant="outlined"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                sx={{ mb: 2 }}
-              />
-              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <IconButton onClick={() => setShowForgotPin(false)}>
-                  <ArrowBackIcon />
-                </IconButton>
-                <StyledButton onClick={handleForgotPin}>
-                  Send Reset Link
-                </StyledButton>
-              </Box>
+          <Box>
+            <Typography
+              variant="h6"
+              gutterBottom
+              fontFamily="'Poppins', sans-serif"
+              sx={{ textAlign: "center" }}
+            >
+              Reset Your PIN
+            </Typography>
+            <TextField
+              fullWidth
+              label="Email"
+              variant="outlined"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+              <IconButton onClick={() => setShowForgotPin(false)}>
+                <ArrowBackIcon />
+              </IconButton>
+              <StyledButton onClick={handleForgotPin}>
+                Send Reset Link
+              </StyledButton>
             </Box>
-          </Fade>
+          </Box>
         )}
       </StyledPaper>
     </Container>

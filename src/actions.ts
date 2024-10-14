@@ -81,6 +81,7 @@ export const useUserActions = () => {
       toast.error(`Error creating holdings: ${error.message}`);
     }
   };
+  
   const getPortfolioSummary = async (userId: string) => {
     try {
       const userDocRef = doc(db, "users", userId);

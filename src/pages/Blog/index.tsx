@@ -1,124 +1,158 @@
-import React, { useState } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Grid, 
-  Card, 
-  CardContent, 
-  CardMedia, 
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import {
+  Container,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  CardMedia,
   CardActions,
   Button,
   TextField,
   InputAdornment,
-  styled
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import newsImg from '../../assets/news.jpeg';
-import newss from '../../assets/newss.jpeg'
-import { IBlogPost } from '../../types';
-
-
+  styled,
+  Dialog,
+  DialogContent,
+  CircularProgress,
+  Skeleton,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 
 const SearchBar = styled(TextField)(({ theme }) => ({
   marginBottom: theme.spacing(2),
-  '& .MuiOutlinedInput-root': {
+  "& .MuiOutlinedInput-root": {
     borderRadius: 20,
-    height:'50px'
+    height: "50px",
   },
 }));
 
-const mockBlogPosts: IBlogPost[] = [
-  {
-    id: 1,
-    title: "Understanding Bitcoin: A Beginner's Guide",
-    excerpt: "Learn the basics of Bitcoin and how it's revolutionizing the financial world.",
-    imageUrl: `${newsImg}`,
-    author: "Jameel muhammed",
-    date: "2023-05-01"
-  },
-  {
-    id: 2,
-    title: "The Rise of DeFi: Decentralized Finance Explained",
-    excerpt: "Explore the world of DeFi and its potential to disrupt traditional financial systems.",
-    imageUrl: `${newss}`,
-    author: "Adebola Clement",
-    date: "2024-05-08"
-  },
-  {
-    id: 3,
-    title: "NFTs: The Future of Digital Ownership",
-    excerpt: "Discover how Non-Fungible Tokens are changing the way we think about digital assets.",
-    imageUrl: `${newsImg}`,
-    author: "ziongate",
-    date: "2022-05-10"
-  },
-  {
-    id: 4,
-    title: "Tbdex: The Future of Financial exchange",
-    excerpt: "Discover how to convert with different currency with out liquidity provided.",
-    imageUrl: `${newss}`,
-    author: "opeyemi james",
-    date: "2023-04-10"
-  },
-  // Add more mock blog posts as needed
-];
-
 const Blog: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [blogPosts, setBlogPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [iframeUrl, setIframeUrl] = useState("");
 
-  const filteredPosts = mockBlogPosts.filter(post =>
-    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchBlogPosts = async () => {
+      try {
+        const response = await axios.get(
+          "https://cryptopanic.com/api/v1/posts/?auth_token=1243ae69f3bd4c7e66cb7355d9cf47e648fe6d5f&public=true"
+        );
+        setBlogPosts(response.data.results);
+      } catch (error) {
+        console.error("Error fetching blog posts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBlogPosts();
+  }, []);
+
+  const handleOpenPost = (url: string) => {
+    setIframeUrl(url);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setIframeUrl("");
+  };
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 10 }}>
-       <Typography variant="h2" gutterBottom fontFamily="'Poppins', sans-serif">
-        Blog
+      <Typography variant="h2" gutterBottom fontFamily="'Poppins', sans-serif">
+        Explore
       </Typography>
-      <SearchBar
-        fullWidth
-        variant="outlined"
-        placeholder="Search blog posts..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        sx={{ mb: 5 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon />
-            </InputAdornment>
-          ),
-        }}
-      />
-      <Grid container spacing={4}>
-        {filteredPosts.map((post) => (
-          <Grid item key={post.id} xs={12} sm={6} md={4}>
-            <Card>
-              <CardMedia
-                component="img"
-                height="200"
-                image={post.imageUrl}
-                alt={post.title}
-              />
-              <CardContent>
-                <Typography gutterBottom variant="h6" component="div">
-                  {post.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {post.excerpt}
-                </Typography>
-                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                  By {post.author} on {post.date}
-                </Typography>
-              </CardContent>
-              <CardActions>
-                <Button size="small">Read More</Button>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <SearchBar
+          fullWidth
+          variant="outlined"
+          placeholder="Search blog posts..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          sx={{ mb: 5 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </div>
+
+      {loading || !blogPosts.length ? (
+        <Grid container spacing={4}>
+          {Array.from(new Array(6)).map((_, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Skeleton variant="rectangular" width="100%" height={200} />
+              <Skeleton width="60%" />
+              <Skeleton width="80%" />
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <Grid container spacing={4}>
+          {blogPosts.map((post) => (
+            <Grid item key={post.id} xs={12} sm={6} md={4}>
+              <Card>
+                <CardMedia
+                  component="img"
+                  height="200"
+                  image={
+                    post.thumbnail
+                      ? post.thumbnail
+                      : "https://via.placeholder.com/300"
+                  }
+                  alt={post.title}
+                />
+                <CardContent>
+                  <Typography gutterBottom variant="h6" component="div">
+                    {post.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {post.domain}
+                  </Typography>
+                  <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                    Published on{" "}
+                    {new Date(post.published_at).toLocaleDateString()}
+                  </Typography>
+                </CardContent>
+                <CardActions>
+                  <Button size="small" onClick={() => handleOpenPost(post.url)}>
+                    Read More
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+        <DialogContent>
+          <iframe
+            src={iframeUrl}
+            title="Blog Post"
+            width="100%"
+            height="600px"
+            style={{ border: "none" }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {loading && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "20px",
+          }}
+        >
+          <CircularProgress />
+        </div>
+      )}
     </Container>
   );
 };
