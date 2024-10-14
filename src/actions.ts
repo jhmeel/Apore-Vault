@@ -39,7 +39,8 @@ import {
 import localforage from "localforage";
 import { Jwt, PresentationExchange } from "@web5/credentials";
 import { useAuth } from "./context/AuthContext";
-import { getLiquidityProviderRating} from "./utils";
+import { getLiquidityProviderRating } from "./utils";
+import pRetry from "p-retry";
 
 export const useUserActions = () => {
   const { state, dispatch } = useContext(UserContext);
@@ -81,7 +82,7 @@ export const useUserActions = () => {
       toast.error(`Error creating holdings: ${error.message}`);
     }
   };
-  
+
   const getPortfolioSummary = async (userId: string) => {
     try {
       const userDocRef = doc(db, "users", userId);
@@ -306,6 +307,7 @@ export const useUserActions = () => {
       }
     } catch (err: any) {
       console.error(`Error fetching and caching offerings: ${err.message}`);
+      throw err
     }
   };
 
@@ -319,7 +321,7 @@ export const useUserActions = () => {
       } else {
         // If not found in cache, refetch
         const offerings = await TbdexHttpClient.getOfferings({ pfiDid: did });
-  
+
         await localforage.setItem(did, JSON.stringify(offerings)); // Cache the new offerings
         return offerings as unknown as Ioffering[];
       }
@@ -455,39 +457,50 @@ export const useUserActions = () => {
     order: Order,
     customerDid: BearerDid
   ): Promise<OrderStatus | null> => {
-    let orderStatusUpdate: OrderStatus | null = null;
-    let close: Close | null = null;
     const MAX_ATTEMPTS = 30;
-    let attempt = 0;
     const POLL_INTERVAL_MS = 2000;
 
-    while (!close && attempt < MAX_ATTEMPTS) {
-      try {
-        const exchange = await TbdexHttpClient.getExchange({
-          pfiDid: order.metadata.to,
-          did: customerDid,
-          exchangeId: order.metadata.exchangeId,
-        });
+    const fetchExchange = async () => {
+      return await TbdexHttpClient.getExchange({
+        pfiDid: order.metadata.to,
+        did: customerDid,
+        exchangeId: order.metadata.exchangeId,
+      });
+    };
 
-        for (const message of exchange) {
-          if (message instanceof OrderStatus) {
-            orderStatusUpdate = message;
-          } else if (message instanceof Close) {
-            close = message;
-            break;
-          }
-        }
+    const pollExchange = async (): Promise<OrderStatus | null> => {
+      const exchange = await fetchExchange();
 
-        if (!close) {
-          await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-          attempt++;
+      for (const message of exchange) {
+        if (message instanceof Close) {
+          return null;
         }
-      } catch (error: any) {
-        console.error(`Error polling order status: ${error.message}`);
+        if (message instanceof OrderStatus) {
+          return message;
+        }
       }
-    }
 
-    return orderStatusUpdate;
+      throw new Error("Order status not found");
+    };
+
+    try {
+      const result = await pRetry(pollExchange, {
+        retries: MAX_ATTEMPTS,
+        minTimeout: POLL_INTERVAL_MS,
+        factor: 1,
+        randomize: false,
+        onFailedAttempt: (error) => {
+          console.warn(
+            `Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`
+          );
+        },
+      });
+
+      return result;
+    } catch (error) {
+      console.error("Failed to poll order status:", error);
+      return null;
+    }
   };
   const handleCloseMessage = (close: Close) => {
     const success = close.data.success;
@@ -501,7 +514,7 @@ export const useUserActions = () => {
   };
 
   // bringing them together
-  const processOrder = async (customerDid: BearerDid, quote: Quote) => {
+  const processTx = async (customerDid: BearerDid, quote: Quote) => {
     try {
       const order = await placeOrder(quote);
       const orderStatusUpdate = await pollOrderStatus(order, customerDid);
@@ -562,50 +575,67 @@ export const useUserActions = () => {
     return exchangeMessage.kind;
   };
 
-  const formatMessages = (exchanges: any) => {
-    const formattedMessages = exchanges.map((exchange) => {
+  type FormattedMessage = {
+    id: string;
+    payinAmount: string;
+    payinCurrency: string | null;
+    payoutAmount: string | null;
+    payoutCurrency: string | undefined;
+    status: string;
+    createdTime: string;
+    expirationTime?: string | null;
+    from: string;
+    to: string;
+    pfiDid: string;
+  };
+
+   const formatMessages = (exchanges: any): FormattedMessage[] => {
+    return exchanges.map((exchange) => {
       const latestMessage = exchange[exchange.length - 1];
       const rfqMessage = exchange.find((message) => message.kind === "rfq");
       const quoteMessage = exchange.find((message) => message.kind === "quote");
-      // console.log('quote', quoteMessage)
+
       const status = generateExchangeStatusValues(latestMessage);
-      const fee = quoteMessage?.data["payin"]?.["fee"];
-      const payinAmount = quoteMessage?.data["payin"]?.["amount"];
+      const fee = quoteMessage?.data?.payin?.fee;
+      const payinAmount = quoteMessage?.data?.payin?.amount;
       const payoutPaymentDetails =
-        rfqMessage.privateData?.payout.paymentDetails;
-      return {
+        rfqMessage.privateData?.payout?.paymentDetails;
+
+      const formattedMessage: FormattedMessage = {
         id: latestMessage.metadata.exchangeId,
         payinAmount:
-          (fee
-            ? Number(payinAmount) + Number(fee)
-            : Number(payinAmount)
-          ).toString() || rfqMessage.data["payinAmount"],
-        payinCurrency: quoteMessage.data["payin"]?.["currencyCode"] ?? null,
-        payoutAmount: quoteMessage?.data["payout"]?.["amount"] ?? null,
-        payoutCurrency: quoteMessage.data["payout"]?.["currencyCode"],
+          fee && payinAmount
+            ? (Number(payinAmount) + Number(fee)).toString()
+            : payinAmount || rfqMessage.data?.payinAmount || "",
+        payinCurrency: quoteMessage?.data?.payin?.currencyCode ?? null,
+        payoutAmount: quoteMessage?.data?.payout?.amount ?? null,
+        payoutCurrency: quoteMessage?.data?.payout?.currencyCode,
         status,
         createdTime: rfqMessage.createdAt,
-        ...(latestMessage.kind === "quote" && {
-          expirationTime: quoteMessage.data["expiresAt"] ?? null,
-        }),
         from: "You",
-        to:
-          payoutPaymentDetails?.address ||
-          payoutPaymentDetails?.accountNumber +
-            ", " +
-            payoutPaymentDetails?.bankName ||
-          payoutPaymentDetails?.phoneNumber +
-            ", " +
-            payoutPaymentDetails?.networkProvider ||
-          "Unknown",
+        to: payoutPaymentDetails
+          ? payoutPaymentDetails.address ||
+            (payoutPaymentDetails.accountNumber && payoutPaymentDetails.bankName
+              ? `${payoutPaymentDetails.accountNumber}, ${payoutPaymentDetails.bankName}`
+              : "") ||
+            (payoutPaymentDetails.phoneNumber &&
+            payoutPaymentDetails.networkProvider
+              ? `${payoutPaymentDetails.phoneNumber}, ${payoutPaymentDetails.networkProvider}`
+              : "") ||
+            "Unknown"
+          : "Unknown",
         pfiDid: rfqMessage.metadata.to,
       };
-    });
 
-    return formattedMessages;
+      if (latestMessage.kind === "quote") {
+        formattedMessage.expirationTime = quoteMessage?.data?.expiresAt ?? null;
+      }
+
+      return formattedMessage;
+    });
   };
 
-  const fetchExchange = async (pfiDID: string) => {
+ const fetchExchange = async (pfiDID: string) => {
     const exchanges = await TbdexHttpClient.getExchanges({
       pfiDid: pfiDID,
       did: userDetails?.did,
@@ -614,31 +644,6 @@ export const useUserActions = () => {
     return mappedExchanges;
   };
 
-  const updateExchanges = (newTransactions) => {};
-
-  const pollExchanges = () => {
-    const fetchAllExchanges = async () => {
-      console.log("Polling exchanges again...");
-      if (!userDetails?.did) return;
-      const allExchanges = [];
-      try {
-        for (const pfi of liquidityProviders) {
-          const exchanges = await fetchExchange(pfi.did);
-          allExchanges.push(...exchanges);
-        }
-        console.log("All exchanges:", allExchanges);
-        updateExchanges(allExchanges.reverse());
-      } catch (error) {
-        console.error("Failed to fetch exchanges:", error);
-      }
-    };
-
-    // Run the function immediately
-    fetchAllExchanges();
-
-    // Set up the interval to run the function periodically
-    setInterval(fetchAllExchanges, 5000); // Poll every 5 seconds
-  };
 
   const createExchange = async (exchangeProps: IExchangeProps) => {
     const selectedCredentials = PresentationExchange.selectCredentials({
@@ -680,7 +685,7 @@ export const useUserActions = () => {
     state,
     createExchange,
     toggleTheme,
-    processOrder,
+    processTx,
     fetchQuoteFromExchange,
     handleCloseMessage,
     fetchAndCacheOfferings,

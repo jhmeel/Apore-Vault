@@ -33,16 +33,6 @@ export default defineConfig({
       transformMixedEsModules: true,
 
     },
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          tbdex: ['@tbdex/http-client'],
-          web5: ['@web5/dids'],
-          levelTranscoder:['level-transcoder'],
-
-        },
-      },
-    },
     sourcemap: true,
   },
   define: {
@@ -50,8 +40,7 @@ export default defineConfig({
     global: 'globalThis',
   },
   optimizeDeps: {
-    include: ['level-transcoder','string.prototype.matchall', '@tbdex/http-client', '@web5/dids'],
-    esbuildOptions: {
+   esbuildOptions: {
       target: 'esnext',
       supported: { bigint: true },
     },

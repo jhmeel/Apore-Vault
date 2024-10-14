@@ -11,13 +11,26 @@ import {
   Button,
   TextField,
   InputAdornment,
-  styled,
-  Dialog,
-  DialogContent,
+  SwipeableDrawer,
+  Box,
   CircularProgress,
   Skeleton,
-} from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
+  useTheme,
+  Chip,
+  useMediaQuery,
+  styled,
+  IconButton,
+} from '@mui/material';
+import {
+  Search as SearchIcon,
+  Menu as MenuIcon,
+  Refresh as RefreshIcon,
+  TrendingUp as TrendingUpIcon,
+  NewReleases as NewReleasesIcon,
+  BookmarkBorder as BookmarkIcon,
+  Close as CloseIcon,
+  ArrowForward,
+} from '@mui/icons-material';
 
 const SearchBar = styled(TextField)(({ theme }) => ({
   marginBottom: theme.spacing(2),
@@ -26,6 +39,26 @@ const SearchBar = styled(TextField)(({ theme }) => ({
     height: "50px",
   },
 }));
+const StyledCard = styled(Card)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+  transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+  '&:hover': {
+    transform: 'translateY(-5px)',
+    boxShadow: theme.shadows[8],
+  },
+}));
+
+const StyledCardMedia = styled(CardMedia)({
+  paddingTop: '56.25%', // 16:9 aspect ratio
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+});
+
+const StyledChip = styled(Chip)(({ theme }) => ({
+  margin: theme.spacing(0.5),
+}));
 
 const Blog: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,14 +66,18 @@ const Blog: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [iframeUrl, setIframeUrl] = useState("");
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     const fetchBlogPosts = async () => {
       try {
-        const response = await axios.get(
-          "https://cryptopanic.com/api/v1/posts/?auth_token=1243ae69f3bd4c7e66cb7355d9cf47e648fe6d5f&public=true"
+        const encodedUrl = encodeURIComponent('https://cryptopanic.com/api/v1/posts/?auth_token=1243ae69f3bd4c7e66cb7355d9cf47e648fe6d5f&public=true');
+        const {data} = await axios.get(
+          `https://api.allorigins.win/raw?url=${encodedUrl}`
         );
-        setBlogPosts(response.data.results);
+        console.log(data.results)
+        setBlogPosts(data.results);
       } catch (error) {
         console.error("Error fetching blog posts:", error);
       } finally {
@@ -51,6 +88,7 @@ const Blog: React.FC = () => {
   }, []);
 
   const handleOpenPost = (url: string) => {
+    console.log(url)
     setIframeUrl(url);
     setOpen(true);
   };
@@ -87,7 +125,7 @@ const Blog: React.FC = () => {
         <Grid container spacing={4}>
           {Array.from(new Array(6)).map((_, index) => (
             <Grid item xs={12} sm={6} md={4} key={index}>
-              <Skeleton variant="rectangular" width="100%" height={200} />
+              <Skeleton variant="rectangular" width="100%" height={80} />
               <Skeleton width="60%" />
               <Skeleton width="80%" />
             </Grid>
@@ -95,19 +133,12 @@ const Blog: React.FC = () => {
         </Grid>
       ) : (
         <Grid container spacing={4}>
-          {blogPosts.map((post) => (
+        {blogPosts
+          .filter((post) => post.title.toLowerCase().includes(searchTerm.toLowerCase()))
+          .map((post) => (
             <Grid item key={post.id} xs={12} sm={6} md={4}>
-              <Card>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={
-                    post.thumbnail
-                      ? post.thumbnail
-                      : "https://via.placeholder.com/300"
-                  }
-                  alt={post.title}
-                />
+              <StyledCard>
+               
                 <CardContent>
                   <Typography gutterBottom variant="h6" component="div">
                     {post.title}
@@ -116,31 +147,52 @@ const Blog: React.FC = () => {
                     {post.domain}
                   </Typography>
                   <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                    Published on{" "}
-                    {new Date(post.published_at).toLocaleDateString()}
+                    Published on {new Date(post.published_at).toLocaleDateString()}
                   </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    {post.currencies?.map((currency) => (
+                      <StyledChip key={currency.code} label={currency.code} variant="outlined" size="small" />
+                    ))}
+                  </Box>
                 </CardContent>
-                <CardActions>
-                  <Button size="small" onClick={() => handleOpenPost(post.url)}>
-                    Read More
+                <CardActions sx={{ marginTop: 'auto' }}>
+                  <Button size="small" onClick={() => handleOpenPost(`https://${post.domain}/${post.slug}`)}>
+                    Read More <ArrowForward fontSize="24"/>
                   </Button>
                 </CardActions>
-              </Card>
+              </StyledCard>
             </Grid>
           ))}
-        </Grid>
-      )}
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-        <DialogContent>
+      </Grid>
+    )}
+      <SwipeableDrawer
+        anchor="bottom"
+        open={open}
+        onClose={handleClose}
+        onOpen={() => {}}
+        disableSwipeToOpen
+      >
+        <Box sx={{ position: 'relative', height: isMobile ? '100vh' : '80vh' }}>
+          <IconButton
+            onClick={handleClose}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
           <iframe
             src={iframeUrl}
             title="Blog Post"
             width="100%"
-            height="600px"
-            style={{ border: "none" }}
+            height="100%"
+            style={{ border: 'none' }}
           />
-        </DialogContent>
-      </Dialog>
+        </Box>
+      </SwipeableDrawer>
 
       {loading && (
         <div

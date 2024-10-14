@@ -23,7 +23,6 @@ import {
   TextField,
   InputAdornment,
   Badge,
-  Drawer,
 } from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import SearchIcon from "@mui/icons-material/Search";
@@ -305,7 +304,6 @@ const Dashboard: React.FC = () => {
         padding: 1,
         paddingBottom: "4rem",
         position: "relative",
-    
       }}
     >
       <Box
@@ -315,7 +313,7 @@ const Dashboard: React.FC = () => {
         mb={2}
       >
         <Typography variant="h6" fontFamily="'Poppins', sans-serif">
-          {userDetails?.fullName.split(" ")[0]} 👋
+          {userDetails?.fullName && `${userDetails?.fullName.split(" ")[0]} 👋`}
         </Typography>
         <Box display="flex" alignItems="center">
           {!address ? (

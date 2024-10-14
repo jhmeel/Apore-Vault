@@ -18,8 +18,8 @@ import { sendPasswordResetEmail } from "firebase/auth";
 import { db, auth } from "../../firebase";
 import toast from "react-hot-toast";
 import logoImg from "../../assets/logo.png";
-import LockOpenIcon from '@mui/icons-material/LockOpen';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const PinInput = styled("input")(({ theme }) => ({
   width: "40px",
@@ -161,14 +161,19 @@ const Checkin: React.FC = () => {
       await sendPasswordResetEmail(auth, email);
       toast.success("Reset link sent to your email");
       setShowForgotPin(false);
-    } catch (error) {
+    } catch (error: any) {
       toast.error("Error sending reset link. Please try again.");
     }
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -191,7 +196,11 @@ const Checkin: React.FC = () => {
           variant="h5"
           gutterBottom
           fontFamily="'Poppins', sans-serif"
-          sx={{ fontWeight: "bold", color: "primary.main", textAlign: "center" }}
+          sx={{
+            fontWeight: "bold",
+            color: "primary.main",
+            textAlign: "center",
+          }}
         >
           {isCreatingPin
             ? "Create Your PIN"
@@ -201,40 +210,48 @@ const Checkin: React.FC = () => {
           <Grid container direction="column" spacing={3}>
             {isCreatingPin ? (
               <>
-                {!pin[3] && <Grid item>
-                  <Typography variant="body2" align="center" gutterBottom>
-                    Choose a 4-digit PIN
-                  </Typography>
-                  <Box display="flex" justifyContent="center" mt={1}>
-                    {pin.map((digit, index) => (
-                      <PinInput
-                        key={`create-${index}`}
-                        id={`pin-${index}`}
-                        type="password"
-                        maxLength={1}
-                        value={digit}
-                        onChange={(e) => handlePinChange(index, e.target.value)}
-                      />
-                    ))}
-                  </Box>
-                </Grid>}
-               {pin[3] && <Grid item>
-                  <Typography variant="body2" align="center" gutterBottom>
-                    Confirm your PIN
-                  </Typography>
-                  <Box display="flex" justifyContent="center" mt={1}>
-                    {confirmPin.map((digit, index) => (
-                      <PinInput
-                        key={`confirm-${index}`}
-                        id={`pin-confirm-${index}`}
-                        type="password"
-                        maxLength={1}
-                        value={digit}
-                        onChange={(e) => handlePinChange(index, e.target.value, true)}
-                      />
-                    ))}
-                  </Box>
-                </Grid>}
+                {!pin[3] && (
+                  <Grid item>
+                    <Typography variant="body2" align="center" gutterBottom>
+                      Choose a 4-digit PIN
+                    </Typography>
+                    <Box display="flex" justifyContent="center" mt={1}>
+                      {pin.map((digit, index) => (
+                        <PinInput
+                          key={`create-${index}`}
+                          id={`pin-${index}`}
+                          type="password"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) =>
+                            handlePinChange(index, e.target.value)
+                          }
+                        />
+                      ))}
+                    </Box>
+                  </Grid>
+                )}
+                {pin[3] && (
+                  <Grid item>
+                    <Typography variant="body2" align="center" gutterBottom>
+                      Confirm your PIN
+                    </Typography>
+                    <Box display="flex" justifyContent="center" mt={1}>
+                      {confirmPin.map((digit, index) => (
+                        <PinInput
+                          key={`confirm-${index}`}
+                          id={`pin-confirm-${index}`}
+                          type="password"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) =>
+                            handlePinChange(index, e.target.value, true)
+                          }
+                        />
+                      ))}
+                    </Box>
+                  </Grid>
+                )}
               </>
             ) : (
               <Grid item>
@@ -258,12 +275,9 @@ const Checkin: React.FC = () => {
             <Grid item sx={{ display: "flex", justifyContent: "center" }}>
               <StyledButton
                 onClick={handleSubmit}
-                disabled={
-                  (isCreatingPin
-                    ? [...pin, ...confirmPin]
-                    : pin
-                  ).some((digit) => digit === "")
-                }
+                disabled={(isCreatingPin ? [...pin, ...confirmPin] : pin).some(
+                  (digit) => digit === ""
+                )}
               >
                 <LockOpenIcon sx={{ mr: 1 }} />
                 {isCreatingPin ? "Create PIN" : "Login"}
@@ -283,7 +297,7 @@ const Checkin: React.FC = () => {
             )}
           </Grid>
         )}
-        
+
         {showForgotPin && (
           <Box>
             <Typography
