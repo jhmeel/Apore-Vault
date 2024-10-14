@@ -306,7 +306,6 @@ export const useUserActions = () => {
         await localforage.setItem(did, JSON.stringify(offerings));
       }
     } catch (err: any) {
-      console.error(`Error fetching and caching offerings: ${err.message}`);
       throw err
     }
   };
